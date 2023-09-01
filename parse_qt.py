@@ -45,6 +45,7 @@ def parse_file(filename):
 
 
 def create_image(entries, offsets, sizes, filename):
+    """Create files of QT image samples"""
     f = open(filename, "rb")
 
     for i in range(entries):
@@ -63,14 +64,19 @@ def main():
     print(f"filename: {args.filename}")
     qt = parse_file(args.filename)
 
+
+    ## this commented out code was used to dump trek tech samples to separate files.
+    ##
+    #print_atom(qt)
+    #track = stsd[0].obj.atoms
+
+    #entries = 1536
+    #sample_size_table = track[-2].obj.sample_size_table
+    #chunk_offset_table = track[-1].obj.chunk_offset_table
+
+    #create_image(entries, chunk_offset_table, sample_size_table, args.filename)
+
     print_atom(qt)
-    track = stsd[0].obj.atoms
-
-    entries = 1536
-    sample_size_table = track[-2].obj.sample_size_table
-    chunk_offset_table = track[-1].obj.chunk_offset_table
-
-    create_image(entries, chunk_offset_table, sample_size_table, args.filename)
 
     print_unkown_fourccs()
 
