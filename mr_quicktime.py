@@ -514,6 +514,12 @@ class udtaAtom(mrc.Block):
     # For historical reasons, the data list is optionally terminated by a 32-bit integer set to 0
 
 
+class freeAtom(mrc.Block):
+    """
+    Free space in the file
+    """
+    free = mrc.Bytes()
+
 class moovAtom(ContainerAtom):
     """
     moov
@@ -555,5 +561,7 @@ def get_atom(atom, atom_kls: type[T]) -> T:
 
 class QuickTime(ContainerAtom):
     CHUNK_MAP = mrcdict()
-    MAPPING = {FourCC(b"mdat"): mdatAtom, FourCC(b"moov"): moovAtom}
+    MAPPING = {FourCC(b"mdat"): mdatAtom,
+               FourCC(b"moov"): moovAtom,
+               FourCC(b"free"): freeAtom}
     CHUNK_MAP.update(MAPPING)
