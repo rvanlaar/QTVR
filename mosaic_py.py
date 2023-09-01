@@ -52,7 +52,8 @@ def handle_object_movies(filename, qt):
     depth = sample_description_table.depth
     create_image = formats.get(data_format, None)
     if create_image is None:
-        print(f"Can only handle rpza object movies: {data_format}")
+        print(f"Unknown file format: {data_format}")
+        print(f"Can only handle RPZA and RLE 24 bits movies.")
         exit(1)
 
 
