@@ -263,7 +263,23 @@ class SampleDescriptionTable(mrc.Block):
     size                     = mrc.UInt32_BE(0x00)
     data_format              = mrc.UInt32_BE(0x04)
     reserved                 = mrc.Bytes(0x08, length=6) # zero
-    data_reference_index     = mrc.UInt16_BE(0xE)
+    data_reference_index     = mrc.UInt16_BE(0x0E)
+
+    version                  = mrc.UInt16_BE(0x10)
+    revision                 = mrc.UInt16_BE(0x12)
+    vendor                   = mrc.UInt32_BE(0x14)
+    temporal_quality         = mrc.UInt32_BE(0x18)
+    spatial_quality          = mrc.UInt32_BE(0x1C)
+    width                    = mrc.UInt16_BE(0x20)
+    height                   = mrc.UInt16_BE(0x22)
+    horiz_resolution         = AppleFloatField(0x24) # pixels per inch
+    vert_resolution          = AppleFloatField(0x28) # pixels per inch
+    reserved                 = mrc.Bytes(0x2C, length=4)
+    frame_count_per_sample   = mrc.UInt16_BE(0x30)
+    compressor_name_size     = mrc.UInt8(0x32)
+    compressor_name          = mrc.Bytes(0x33, length=mrc.Ref("compressor_name_size"))
+    depth                    = mrc.UInt16_BE(0x52)
+    colorTableId             = mrc.Int16_BE(0x54)
 
 
 class stsdAtom(mrc.Block):
