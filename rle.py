@@ -42,7 +42,7 @@ class RLEFrame:
     def next_pixel(self):
         self.pos_x += 1
         if not (self.pos_x <= self.width):
-            print("ERROR: continue anyway")
+            print("RLE: width out of bounds: continue anyway")
 
     def next_line(self):
         self.pos_x = 0
