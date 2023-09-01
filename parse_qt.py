@@ -20,7 +20,7 @@ stsd = []
 
 def print_atom(atom, indent=0):
     indent_str = ">" * indent
-    # print(f"{indent_str}{atom}")
+    print(f"{indent_str}{atom}")
     if hasattr(atom, "obj") and isinstance(atom.obj, stblAtom):
         stsd.append(atom)
     if hasattr(atom, "atoms"):
