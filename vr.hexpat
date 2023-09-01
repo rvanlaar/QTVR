@@ -364,6 +364,7 @@ struct SampleEntrySelector {
     match(atom_header.box_type) {
         ("cvid"): VisualSampleEntry cvid;
         ("smc "): VisualSampleEntry smc;
+        ("rle "): VisualSampleEntry rle;
         ("pano"): PanoSampleDescription  pano;
         (_):  UnknownSampleEntry unknown [[name(atom_header.box_type)]];
     }

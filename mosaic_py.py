@@ -12,8 +12,10 @@ from mr_quicktime import (NAVGAtom, QuickTime, ctypAtom, get_atom, get_atoms,
                           stblAtom, stcoAtom, stscAtom, stsdAtom, stszAtom,
                           tkhdAtom, trakAtom)
 from rpza import create_image_rpza
+from rle import create_image_rle
 
-formats = {"rpza": create_image_rpza}
+formats = {"rpza": create_image_rpza,
+           "rle ": create_image_rle}
 
 def parse_file(filename: Path):
     f = open(filename, "rb").read()
@@ -47,11 +49,12 @@ def handle_object_movies(filename, qt):
     ).obj.sample_description_table[0]
 
     data_format = FourCCB(sample_description_table.data_format).decode("ASCII")
+    depth = sample_description_table.depth
     create_image = formats.get(data_format, None)
-
     if create_image is None:
         print(f"Can only handle rpza object movies: {data_format}")
         exit(1)
+
 
     stsc = get_atom(sample_table, stscAtom).obj
     samples_per_chunk = stsc.sample_to_chunk_table[0].samples_per_chunk
@@ -90,7 +93,7 @@ def handle_object_movies(filename, qt):
             sample_offset = 0
         chunk_offset = chunk_offsets[chunk_id - 1]
         total_offset = chunk_offset + sample_offset
-        frame = create_image(filename, sample_size, total_offset, width, height)
+        frame = create_image(filename, sample_size, total_offset, width, height, depth)
         sample_offset += sample_size
 
         # write frame out to the destination mosaic

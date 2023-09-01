@@ -62,7 +62,12 @@ def color_to_rbg(color: int):
 
 
 def create_image_rpza(
-    filename: Path, sample_size: int, sample_offset: int, width: int, height: int
+    filename: Path,
+    sample_size: int,
+    sample_offset: int,
+    width: int,
+    height: int,
+    depth: int,
 ):
     frame = RPZAFrame(width, height)
 
