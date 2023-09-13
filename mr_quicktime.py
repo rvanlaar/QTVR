@@ -539,8 +539,19 @@ class moovAtom(ContainerAtom):
     CHUNK_MAP.update(MAPPING)
 
 
-T = TypeVar("T")
 
+
+
+class QuickTime(ContainerAtom):
+    CHUNK_MAP = mrcdict()
+    MAPPING = {
+        FourCC(b"mdat"): mdatAtom,
+        FourCC(b"moov"): moovAtom,
+        FourCC(b"free"): freeAtom,
+    }
+    CHUNK_MAP.update(MAPPING)
+
+T = TypeVar("T")
 
 def get_atoms(atom, atom_kls: type[T]) -> list[T]:
     atoms = []
@@ -557,14 +568,23 @@ def get_atoms(atom, atom_kls: type[T]) -> list[T]:
                 atoms.extend(get_atoms(parent_atom, atom_kls))
     return atoms
 
-def get_atom(atom, atom_kls: type[T]) -> T:
+from enum import IntEnum, auto
+
+def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
     atoms = get_atoms(atom, atom_kls)
     assert len(atoms) == 1
     return atoms[0]
 
-class QuickTime(ContainerAtom):
-    CHUNK_MAP = mrcdict()
-    MAPPING = {FourCC(b"mdat"): mdatAtom,
-               FourCC(b"moov"): moovAtom,
-               FourCC(b"free"): freeAtom}
-    CHUNK_MAP.update(MAPPING)
+
+class QTVRType(IntEnum):
+    PANORAMA = auto()
+    OBJECT = auto()
+
+def is_qtvr(atom: mrc.Block) -> QTVRType | None:
+    ctyp = get_atom(atom, ctypAtom)
+    controller_id = FourCCB(ctyp.obj.id)
+    if controller_id == b"stna":
+        return QTVRType.OBJECT
+    if controller_id in (b"stpn", b"STpn"):
+        return QTVRType.PANORAMA
+    return None
