@@ -361,9 +361,9 @@ struct PanoSampleDescription: Atom {
     s32 hotSpotSizeX;
     s32 hotSpotSizeY;
     padding[sizeof(u16)];
-    s16 hotSponNumFramesX;
+    s16 hotSpotNumFramesX;
     s16 hotSpotNumFrameY;
-    s16 hotsportColorDepth;
+    s16 hotspotColorDepth;
 
     $ += contents_size(addressof(this), box_size);
 };
