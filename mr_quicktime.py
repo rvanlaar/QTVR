@@ -118,7 +118,10 @@ class tkhdAtom(mrc.Block):
     #//apple_ref/doc/uid/TP40000939-CH204-BBCEIDFA
     """
     version              = mrc.UInt8(0x0)
-    flags                = mrc.Bytes(0x1, length=3)
+    track_in_poster      = mrc.Bits(0x03, 0b1000)
+    track_in_preview     = mrc.Bits(0x03, 0b0100)
+    track_in_movie       = mrc.Bits(0x03, 0b0010)
+    track_enabled        = mrc.Bits(0x03, 0b0001)
     creation_time        = mrc.UInt32_BE(0x4)
     modification_time    = mrc.UInt32_BE(0x8)
     track_id             = mrc.UInt32_BE(0xc)

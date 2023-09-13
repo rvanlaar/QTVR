@@ -212,7 +212,18 @@ struct MovieHeaderAtom : FullAtom {
     u32 next_track_id;
 }[[format("format_mvhd")]];
 
-struct TrackHeaderAtom : FullAtom {
+bitfield TrackHeaderFlags {
+    padding : 4;
+    bool track_in_poster: 1;
+    bool track_in_preview: 1;
+    bool track_in_movie: 1;
+    bool track_enabled : 1;
+};
+
+struct TrackHeaderAtom : Atom {
+    u8 version;
+    padding[2];
+    TrackHeaderFlags;
     u32 creation_time;
     u32 modification_time;
     u32 track_id;
