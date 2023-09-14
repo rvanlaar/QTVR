@@ -322,12 +322,12 @@ class stsdAtom(mrc.Block):
     number_of_entries        = mrc.UInt32_BE(0x04)
     sample_description_table = mrc.BlockField(SampleDescriptionTable, 0x08, count=mrc.Ref("number_of_entries"))
 
-# TODO: create sample_to_chunk_table
 
 class SampleToChunkTable(mrc.Block):
     first_chunk              = mrc.UInt32_BE(0x00)
     samples_per_chunk        = mrc.UInt32_BE(0x04)
     sample_description       = mrc.UInt32_BE(0x08)
+
 
 class stscAtom(mrc.Block):
     """
@@ -338,6 +338,7 @@ class stscAtom(mrc.Block):
     number_of_entries        = mrc.UInt32_BE(0x04)
     sample_to_chunk_table    = mrc.BlockField(SampleToChunkTable, 0x08, count=mrc.Ref("number_of_entries"))
 
+
 class sttsAtom(mrc.Block):
     """
     SampleTable Time to Sample
@@ -346,6 +347,7 @@ class sttsAtom(mrc.Block):
     flags                    = mrc.Bytes(0x01, length=3)
     number_of_entries        = mrc.UInt32_BE(0x04)
     time_to_sample_table     = mrc.Bytes(0x08)
+
 
 class stssAtom(mrc.Block):
     """
@@ -358,8 +360,10 @@ class stssAtom(mrc.Block):
     number_of_entries        = mrc.UInt32_BE(0x04)
     sync_sample_table        = mrc.Bytes(0x08)
 
+
 class SampleSizeTableEntry(mrc.Block):
     size                     = mrc.Int32_BE(0x00)
+
 
 class stszAtom(mrc.Block):
     """
@@ -370,6 +374,7 @@ class stszAtom(mrc.Block):
     sample_size              = mrc.UInt32_BE(0x04)
     number_of_entries        = mrc.UInt32_BE(0x08)
     sample_size_table        = mrc.BlockField(SampleSizeTableEntry, 0x0C, count=mrc.Ref("number_of_entries"))
+
 
 class NAVGAtom(mrc.Block):
     """
