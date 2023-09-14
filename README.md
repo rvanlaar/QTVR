@@ -15,12 +15,11 @@ A special build for PyAV is needed with 2 PRs combined.
 
 To build PyAV:
     ```
-    git clone https://github.com/rvanlaar/PyAV
+    git clone https://github.com/rvanlaar/PyAV -b cython3
     cd PyAV
-    git switch cython3
     source scripts/activate.sh
     scripts/build-deps
-    python3 setup.pt bdist_wheel
+    python3 setup.py bdist_wheel
     ```
 
 This will create a file in dist/. In my case `av-10.0.0-cp310-cp310-linux_x86_64.whl`
