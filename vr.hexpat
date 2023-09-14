@@ -114,16 +114,16 @@ struct NAVGAtom: Atom {
     fixed_s32 initialHPan;
     fixed_s32 initialVPan;
     padding[4];
-    
+
 };
 
 // moov -> udta
 struct UserDataChildAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
 
-    match(atom_header.box_type) { 
+    match(atom_header.box_type) {
         ("ctyp"): CTYPAtom ctyp;
         ("NAVG"): NAVGAtom navg;
         (_): UnknownAtom unknown [[name(atom_header.box_type)]];
@@ -281,7 +281,7 @@ struct ChunkOffsetAtom : FullAtom {
 
 struct UnknownSampleEntryChildSelector {
     Atom box_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         (_): UnknownAtom unknown [[name(box_header.box_type)]];
@@ -331,9 +331,9 @@ struct PanoSampleDescription: Atom {
     // https://developer.apple.com/library/archive/technotes/tn/tn1035.html
     std::print("pano located at: 0x{:X}", addressof(this));
     padding[sizeof(u32)];
-    padding[sizeof(u32)];
+    padding[sizeof(u32)]; // must be zero, sometimes it contains a 1
 
-    s16 majorVersion;
+    s16 majorVersion; // must be zero, sometimes it contains a 1
     s16 minorVersion;
     s32 sceneTrackID;
     s32 loResSceneTrackID;
@@ -343,10 +343,10 @@ struct PanoSampleDescription: Atom {
     fixed_s32 hPanStart;
     fixed_s32 hPanEnd;
     fixed_s32 vPanTop;
-    fixed_s32 vPanBottom; // TODO: number is off...
+    fixed_s32 vPanBottom;
     fixed_s32 minimumZoom;
     fixed_s32 maximumZoom;
-    
+
     // Info for highest res version of scene track
 
     s32 sceneSizeX;
@@ -356,7 +356,7 @@ struct PanoSampleDescription: Atom {
     s16 sceneNumFramesX;
     s16 sceneNumFramesY;
     s16 sceneColorDepth;
-    
+
     // Info for highest res version of hotSpot track
     s32 hotSpotSizeX;
     s32 hotSpotSizeY;
@@ -370,13 +370,14 @@ struct PanoSampleDescription: Atom {
 
 struct SampleEntrySelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("cvid"): VisualSampleEntry cvid;
         ("smc "): VisualSampleEntry smc;
         ("rle "): VisualSampleEntry rle;
-        ("pano"): PanoSampleDescription  pano;
+        ("pano"): PanoSampleDescription pano;
+        //("qtvr"): QTVRSampleDescription qtvr;
         (_):  UnknownSampleEntry unknown [[name(atom_header.box_type)]];
     }
 
@@ -470,7 +471,7 @@ using DataReferenceAtom;
 
 struct DataEntryAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("alis"): FullAtom alis;
@@ -487,7 +488,7 @@ struct DataReferenceAtom : FullAtom {
 
 struct DataInformationChildAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("dref"): DataReferenceAtom dref;
@@ -544,7 +545,7 @@ struct STPanoMediaInfoAtom: Atom {
     STPanoMediaInfoChildAtomSelector children[while (contents_size(addressof(this), box_size) > MIN_BOX_SIZE)];
 };
 
-struct GMHDChildAtomSelector { 
+struct GMHDChildAtomSelector {
     Atom atom_header [[hidden]];
 
     $ = addressof(this);
@@ -566,7 +567,7 @@ struct MediaInformationChildAtomSelector {
     Atom atom_header [[hidden]];
 
     $ = addressof(this);
-    
+
     match(atom_header.box_type) {
         ("stbl"): SampleTableAtom stbl;
         ("hdlr"): HandlerAtom hdlr;
@@ -727,3 +728,96 @@ struct RootAtom {
 } [[inline]];
 
 RootAtom atoms[while(std::mem::size() - $ > MIN_BOX_SIZE)] @ 0x00 [[format("format_box_array")]];
+
+struct HotSpotEntry {
+    u16 hotSpotId;
+    padding[2];
+    char type[4];
+    u32 typeData;
+    fixed_s32 viewHPan;
+    fixed_s32 viewVPan;
+    fixed_s32 viewZoom;
+    u16 rect1;
+    u16 rect2;
+    u16 rect3;
+    u16 rect4;
+    s32 mouseOVerCursorID;
+    s32 mouseDownCursorID;
+    s32 mouseUpCursorID;
+    padding[sizeof(s32)];
+    s32 nameStrOffset;
+    s32 commentStrOffset;
+};
+
+struct pHot: Atom {
+    padding[2];
+    u16 numHotSpots;
+    HotSpotEntry entries[numHotSpots];
+};
+
+struct pHdr: Atom {
+    u32 nodeID;
+    fixed_s32 defHPan;
+    fixed_s32 defVPan;
+    fixed_s32 defZoom;
+    fixed_s32 minHPan;
+    fixed_s32 minVPan;
+    fixed_s32 minZoom;
+    fixed_s32 maxHPan;
+    fixed_s32 maxVPan;
+    fixed_s32 maxZoom;
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 nameStrOffset;
+    u32 commentStrOffset;
+};
+
+struct PanoLink {
+    u16 linkID;
+    padding[sizeof(u16)];
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 toNodeID;
+    padding[sizeof(u32) * 3];
+    fixed_s32 toHPan;
+    fixed_s32 toVPan;
+    fixed_s32 toZoom;
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 nameStrOffset;
+    u32 commentStrOffset;
+};
+
+struct LinkTableAtom : Atom {
+    padding[sizeof(u16)];
+    u16 numLinks;
+    PanoLink entries[numLinks];
+};
+
+struct PascalString {
+    std::string::SizedString<u8> name;
+};
+
+struct StringTableAtom : Atom {
+    PascalString children[while (contents_size(addressof(this), box_size) > MIN_BOX_SIZE)];
+};
+
+struct PanoramaMDAT {
+    Atom atom_header [[hidden]];
+    $ = addressof(this);
+    if ($ + contents_size(addressof(this), atom_header.box_size) <= std::mem::size()) {
+
+        match(atom_header.box_type) {
+            ("pHot"): pHot phot;
+            ("pHdr"): pHdr phdr;
+            ("pLnk"): LinkTableAtom plnk;
+            ("strT"): StringTableAtom strt;
+            (_): UnknownAtomSelector unknown [[name(atom_header.box_type)]];
+        }
+    } else {
+        $ = std::mem::size();
+    }
+
+} [[inline]];
+
+PanoramaMDAT Pmdat [while($ < 0x54B89D)] @ 0x54B652 [[format("format_box_array")]];

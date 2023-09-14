@@ -701,7 +701,7 @@ def get_atoms(atom, atom_kls: type[T]) -> list[T]:
 from enum import IntEnum, auto
 
 
-def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
+def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T | None:
     atoms = get_atoms(atom, atom_kls)
     assert len(atoms) <= 1
     if atoms:
