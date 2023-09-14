@@ -539,9 +539,6 @@ class moovAtom(ContainerAtom):
     CHUNK_MAP.update(MAPPING)
 
 
-
-
-
 class QuickTime(ContainerAtom):
     CHUNK_MAP = mrcdict()
     MAPPING = {
