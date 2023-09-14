@@ -703,9 +703,10 @@ from enum import IntEnum, auto
 
 def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
     atoms = get_atoms(atom, atom_kls)
-    assert len(atoms) == 1
-    return atoms[0]
-
+    assert len(atoms) <= 1
+    if atoms:
+        return atoms[0]
+    return None
 
 class QTVRType(IntEnum):
     PANORAMA = auto()
