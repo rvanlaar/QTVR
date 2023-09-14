@@ -155,5 +155,7 @@ def main():
         case QTVRType.PANORAMA:
             print("detected: panorama movie")
             handle_panorama_movies(args.filename, qt)
+        case QTVRType.V2:
+            print("Can't handle QTVR2 or later")
         case _:
             print("Not a QTVR 1 movie")

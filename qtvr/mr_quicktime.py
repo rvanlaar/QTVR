@@ -608,6 +608,7 @@ def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
 class QTVRType(IntEnum):
     PANORAMA = auto()
     OBJECT = auto()
+    V2 = auto()
 
 
 def is_qtvr(atom: mrc.Block) -> QTVRType | None:
@@ -617,4 +618,6 @@ def is_qtvr(atom: mrc.Block) -> QTVRType | None:
         return QTVRType.OBJECT
     if controller_id in (b"stpn", b"STpn"):
         return QTVRType.PANORAMA
+    if controller_id == b"qtvr":
+        return QTVRType.V2
     return None

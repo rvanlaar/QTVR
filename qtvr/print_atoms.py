@@ -3,7 +3,7 @@ from pathlib import Path
 
 from . import mr_quicktime
 
-from .mr_quicktime import QuickTime, stblAtom
+from .mr_quicktime import QuickTime, stblAtom, is_qtvr, QTVRType
 
 
 def print_unkown_fourccs():
@@ -63,4 +63,15 @@ def main():
     qt = parse_file(args.filename)
 
     print_atom(qt)
+
+    match is_qtvr(qt):
+        case QTVRType.OBJECT:
+            print("QTVR1: object movie")
+        case QTVRType.PANORAMA:
+            print("QTVR1: panorama movie")
+        case QTVRType.V2:
+            print("QTVR: 2 or later")
+        case _:
+            print("Not a QTVR movie")
+
     print_unkown_fourccs()
