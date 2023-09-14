@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pyqtfile"
+name = "qtvr"
 version = "0.1.0"
 description = ""
 authors = ["Roland van Laar <roland@rolandvanlaar.nl>"]
@@ -9,11 +9,18 @@ python = "^3.10"
 mrcrowbar = {git = "https://github.com/moralrecordings/mrcrowbar"}
 numpy = "^1.25.2"
 pillow = "^10.0.0"
+av = {path = "../PyAV/dist/av-10.0.0-cp310-cp310-linux_x86_64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
 ipdb = "*"
 black = "*"
+
+[tool.poetry.scripts]
+decode_cinepak = "qtvr.decoders.cinepak:main"
+print_atoms = "qtvr.print_atoms:main"
+make_mosaic_ffmpeg = "qtvr.mosaic_ffmpeg:main"
+make_mosaic = "qtvr.mosaic:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

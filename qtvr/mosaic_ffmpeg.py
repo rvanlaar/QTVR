@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import argparse
 import subprocess
 import tempfile
@@ -7,8 +5,8 @@ from pathlib import Path
 
 from mrcrowbar.utils import to_uint32_be as FourCCB
 
-from human_sort import human_sort
-from mr_quicktime import NAVGAtom, QuickTime, ctypAtom, get_atoms
+from .human_sort import human_sort
+from .mr_quicktime import NAVGAtom, QuickTime, ctypAtom, get_atoms
 
 
 def parse_file(filename):
@@ -65,7 +63,3 @@ def main():
     controller_id = FourCCB(ctype[0].obj.id)
     if controller_id == b"stna":
         handle_object_movies(args.filename, qt)
-
-
-if __name__ == "__main__":
-    main()

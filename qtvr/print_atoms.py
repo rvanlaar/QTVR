@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 import argparse
 from pathlib import Path
 
-import mr_quicktime
+from . import mr_quicktime
 
-from mr_quicktime import QuickTime, stblAtom
+from .mr_quicktime import QuickTime, stblAtom
 
 
 def print_unkown_fourccs():
@@ -66,7 +64,3 @@ def main():
 
     print_atom(qt)
     print_unkown_fourccs()
-
-
-if __name__ == "__main__":
-    main()

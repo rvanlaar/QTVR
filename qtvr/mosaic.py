@@ -10,23 +10,36 @@ from PIL import Image
 
 import av
 
-from mr_quicktime import (NAVGAtom, QuickTime, get_atom, get_atoms,
-                          stblAtom, stcoAtom, stscAtom, stsdAtom, stszAtom,
-                          tkhdAtom, trakAtom, is_qtvr, QTVRType)
+from .mr_quicktime import (
+    NAVGAtom,
+    QuickTime,
+    get_atom,
+    get_atoms,
+    stblAtom,
+    stcoAtom,
+    stscAtom,
+    stsdAtom,
+    stszAtom,
+    tkhdAtom,
+    trakAtom,
+    is_qtvr,
+    QTVRType,
+)
 
-formats = {"rpza": "rpza",
-           "rle ": "qtrle",
-           "cine": "cinepak"}
+formats = {"rpza": "rpza", "rle ": "qtrle", "cine": "cinepak"}
+
 
 def create_image(codec: av.codec.Codec, data: bytes) -> Image:
     p = av.Packet(data)
     frame = codec.decode(p)[0]
     return frame.to_image()
 
+
 def parse_file(filename: Path):
     with open(filename, "rb") as f:
-        qt =  QuickTime(f.read())
+        qt = QuickTime(f.read())
     return qt
+
 
 def handle_object_movies(filename, qt):
     navg_list = get_atoms(qt, NAVGAtom)
@@ -71,7 +84,9 @@ def handle_object_movies(filename, qt):
     stsc = get_atom(sample_table, stscAtom).obj
     samples_per_chunk = stsc.sample_to_chunk_table[0].samples_per_chunk
 
-    sample_chunk_table = [[i.first_chunk, i.samples_per_chunk] for i in stsc.sample_to_chunk_table]
+    sample_chunk_table = [
+        [i.first_chunk, i.samples_per_chunk] for i in stsc.sample_to_chunk_table
+    ]
 
     chunk_offsets = [i.pointer for i in chunk_offset_table]
     sample_sizes = [i.size for i in sample_size_table]
@@ -97,7 +112,7 @@ def handle_object_movies(filename, qt):
                 sample_to_chunk[sample_id] = chunk_id, first_in_chunk
                 first_in_chunk = False
             chunk_id += 1
-            sample_id += 1  
+            sample_id += 1
 
     with open(filename, "rb") as movie:
         for sample_id, sample_size in enumerate(sample_sizes):
@@ -122,8 +137,10 @@ def handle_object_movies(filename, qt):
     name = filename.name
     dst.save(f"mosaic-{name}.png")
 
+
 def handle_panorama_movies(filename: Path, qt: QuickTime):
     pass
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -140,6 +157,3 @@ def main():
             handle_panorama_movies(args.filename, qt)
         case _:
             print("Not a QTVR 1 movie")
-
-if __name__ == "__main__":
-    main()

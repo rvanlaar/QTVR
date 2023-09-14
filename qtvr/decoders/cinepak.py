@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # https://multimedia.cx/mirror/cinepak.txt
 
 from __future__ import annotations
@@ -254,7 +252,3 @@ def main():
     args = parser.parse_args()
 
     parse(args.filename)
-
-
-if __name__ == "__main__":
-    main()
