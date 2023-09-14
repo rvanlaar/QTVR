@@ -288,27 +288,82 @@ class stcoAtom(mrc.Block):
     chunk_offset_table       = mrc.BlockField(ChunkOffsetTableEntry, 0x08, count=mrc.Ref("number_of_entries"))
 
 
-class SampleDescriptionTable(mrc.Block):
-    size                     = mrc.UInt32_BE(0x00)
-    data_format              = mrc.UInt32_BE(0x04)
-    reserved                 = mrc.Bytes(0x08, length=6) # zero
-    data_reference_index     = mrc.UInt16_BE(0x0E)
+class VideoSampleDescriptionTableEntry(mrc.Block):
+    reserved                 = mrc.Bytes(0x00, length=6) # zero
+    data_reference_index     = mrc.UInt16_BE(0x06)
 
-    version                  = mrc.UInt16_BE(0x10)
-    revision                 = mrc.UInt16_BE(0x12)
-    vendor                   = mrc.UInt32_BE(0x14)
-    temporal_quality         = mrc.UInt32_BE(0x18)
+    version                  = mrc.UInt16_BE(0x08)
+    revision                 = mrc.UInt16_BE(0x0A)
+    vendor                   = mrc.UInt32_BE(0x0C)
+    temporal_quality         = mrc.UInt32_BE(0x14)
     spatial_quality          = mrc.UInt32_BE(0x1C)
-    width                    = mrc.UInt16_BE(0x20)
-    height                   = mrc.UInt16_BE(0x22)
-    horiz_resolution         = AppleFloatField(0x24) # pixels per inch
-    vert_resolution          = AppleFloatField(0x28) # pixels per inch
-    reserved                 = mrc.Bytes(0x2C, length=4)
-    frame_count_per_sample   = mrc.UInt16_BE(0x30)
-    compressor_name_size     = mrc.UInt8(0x32)
-    compressor_name          = mrc.Bytes(0x33, length=mrc.Ref("compressor_name_size"))
-    depth                    = mrc.UInt16_BE(0x52)
-    colorTableId             = mrc.Int16_BE(0x54)
+
+    width                    = mrc.UInt16_BE(0x18)
+    height                   = mrc.UInt16_BE(0x1A)
+    horiz_resolution         = AppleFloatField(0x1C) # pixels per inch
+    vert_resolution          = AppleFloatField(0x20) # pixels per inch
+    reserved                 = mrc.Bytes(0x24, length=4)
+    frame_count_per_sample   = mrc.UInt16_BE(0x28)
+    compressor_name_size     = mrc.UInt8(0x2A)
+    compressor_name          = mrc.Bytes(0x2B, length=mrc.Ref("compressor_name_size"))
+    depth                    = mrc.UInt16_BE(0x4A)
+    colorTableId             = mrc.Int16_BE(0x4C)
+
+
+class PanoSampleDescriptionTableEntry(mrc.Block):
+    """
+    Panorama Track Sample Description
+
+    Source: https://developer.apple.com/library/archive/technotes/tn/tn1035.html
+    """
+    reserved1                = mrc.UInt32_BE(0x00)
+    reserved2                = mrc.UInt32_BE(0x04) # must be zero, also observed to be 1
+    majorVersion             = mrc.Int16_BE(0x08) # must be zero, also observed to be 1
+    minorVersion             = mrc.Int16_BE(0x0A)
+    sceneTrackID             = mrc.Int32_BE(0x0C)
+    loResSceneTrackID        = mrc.Int32_BE(0x10)
+    reserved3                = mrc.Bytes(0x14, length = 4 * 6)
+    hotSpotTrackID           = mrc.Int32_BE(0x2C)
+    reserved4                = mrc.Bytes(0x30, length = 4 * 9)
+    hPanStart                = AppleFloatField(0x54)
+    hPanEnd                  = AppleFloatField(0x58)
+    vPanTop                  = AppleFloatField(0x5C)
+    vPanBottom               = AppleFloatField(0x60)
+    minimumZoom              = AppleFloatField(0x64)
+    maximumZoom              = AppleFloatField(0x68)
+
+    # info for the highest res version of scene track
+    sceneSizeX               = mrc.UInt32_BE(0x6C)
+    sceneSizeY               = mrc.UInt32_BE(0x70)
+    numFrames                = mrc.UInt32_BE(0x74)
+    reserved5                = mrc.Int16_BE(0x76)
+    sceneNumFramesX          = mrc.Int16_BE(0x78)
+    sceneNumFramesY          = mrc.Int16_BE(0x7A)
+    sceneColorDepth          = mrc.Int16_BE(0x7C)
+
+    # info for the highest rest version of hotSpot track
+    hotSpotSizeX             = mrc.Int32_BE(0x7E) # pixel width of the hot spot panorama
+    hotSpotSizeY             = mrc.Int32_BE(0x82) # pixel height of the hot spot panorama
+    reserved6                = mrc.Int16_BE(0x86)
+    hotSpotNumFramesX        = mrc.Int16_BE(0x88) # diced frames wide
+    hotSpotNumFramesY        = mrc.Int16_BE(0x8A) # dices frame high
+    hotSpotColorDepth        = mrc.Int16_BE(0x8C) # must be 8
+
+
+class SampleDescriptionTable(ContainerAtom):
+    CHUNK_MAP = mrcdict()
+    CHUNK_MAP.base_class = VideoSampleDescriptionTableEntry
+    MAPPING = {
+        FourCC(b"pano"): PanoSampleDescriptionTableEntry
+    }
+    # set defaults for known image compression formats
+    image_compression_formats = [b"cvid", b"rpza", b"smc ", b"rle ", b"cvid"]
+    for codec in image_compression_formats:
+        MAPPING[FourCC(codec)] = VideoSampleDescriptionTableEntry
+
+    CHUNK_MAP.update(MAPPING)
+
+    data_format = mrc.UInt32_BE(0x04)
 
 
 class stsdAtom(mrc.Block):
@@ -408,16 +463,58 @@ class NAVGAtom(mrc.Block):
     reserved2                = mrc.UInt32_BE(0x2C) # Zro
 
 
-class gmhdAtom(mrc.Block):
+class gminAtom(mrc.Block):
+    """
+    Base Media Info Atom
+    """
+    version                  = mrc.UInt8(0x00)
+    flags                    = mrc.Bytes(0x01, length=3)
+    graphics_mode            = mrc.UInt16_BE(0x04)
+    opcolor                  = mrc.Bytes(0x06, length=6)
+    balance                  = mrc.UInt16_BE(0x0C)
+    reserved                 = mrc.Bytes(0x0E, length=2)
+
+
+class PanoMediaInfoIDTable(mrc.Block):
+    nodeID                   = mrc.UInt32_BE(0x00)
+    time                     = mrc.UInt32_BE(0x04)
+
+
+class pInfAtom(mrc.Block):
+    """
+    PanoMediaInfo
+    """
+    name                     = mrc.Bytes(0x00, length=32)
+    defNodeID                = mrc.UInt32_BE(0x20)
+    defZoom                  = AppleFloatField(0x24)
+    reserved                 = mrc.UInt32_BE(0x28)
+    pad                      = mrc.Int16_BE(0x2C)
+    number_of_entries        = mrc.Int16_BE(0x2E)
+    IDTable                  = mrc.BlockField(PanoMediaInfoIDTable, 0x30, count=mrc.Ref("number_of_entries"))
+
+
+class STpnAtom(ContainerAtom):
+    CHUNK_MAP = mrcdict()
+    MAPPING = {
+        FourCC(b"pInf"): pInfAtom
+    }
+    CHUNK_MAP.update(MAPPING)
+
+
+class gmhdAtom(ContainerAtom):
     """
     base Media inforation HeaDer
 
     Indicates that this media information atom pertains to a base media
     """
-    pass
+
+    CHUNK_MAP = mrcdict()
+    MAPPING = {FourCC(b"gmin"): gminAtom,
+               FourCC(b"STpn"): STpnAtom}
+
+    CHUNK_MAP.update(MAPPING)
 
 # fmt: on
-
 
 class dinfAtom(ContainerAtom):
     """

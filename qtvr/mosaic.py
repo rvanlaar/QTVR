@@ -69,7 +69,8 @@ def handle_object_movies(filename, qt):
     ).obj.sample_description_table[0]
 
     data_format = FourCCB(sample_description_table.data_format).decode("ASCII")
-    depth = sample_description_table.depth
+    sample_description_entry = sample_description_table.atoms[0].obj
+    depth = sample_description_entry.depth
     ffmpeg_codec = formats.get(data_format, None)
     if ffmpeg_codec is None:
         print(f"Unknown file format: {data_format}")
