@@ -26,7 +26,9 @@ from .mr_quicktime import (
     QTVRType,
 )
 
-formats = {"rpza": "rpza", "rle ": "qtrle", "cine": "cinepak"}
+from .mr_panorama import get_pano_track
+
+formats = {"rpza": "rpza", "rle ": "qtrle", "cvid": "cinepak", "smc ": "smc"}
 
 
 def create_image(codec: av.codec.Codec, data: bytes) -> Image:
@@ -55,6 +57,11 @@ def handle_object_movies(filename, qt):
 
     trak_atom = get_atom(qt, trakAtom)
 
+    export_name = f"mosaic-{filename.name}"
+
+    create_mosaic(filename, export_name, columns, rows, trak_atom)
+
+def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
     trak_header = get_atom(trak_atom, tkhdAtom)
     width = int(trak_header.obj.track_width)
     height = int(trak_header.obj.track_height)
@@ -74,7 +81,7 @@ def handle_object_movies(filename, qt):
     ffmpeg_codec = formats.get(data_format, None)
     if ffmpeg_codec is None:
         print(f"Unknown file format: {data_format}")
-        print(f"Can only handle RPZA, cinepak and RLE movies.")
+        print(f"Can only handle RPZA, cinepak, SMC, and RLE movies.")
         exit(1)
 
     codec = av.Codec(ffmpeg_codec, "r").create()
@@ -115,6 +122,7 @@ def handle_object_movies(filename, qt):
             chunk_id += 1
             sample_id += 1
 
+    image_id = 0
     with open(filename, "rb") as movie:
         for sample_id, sample_size in enumerate(sample_sizes):
             chunk_id, first_in_chunk = sample_to_chunk[sample_id]
@@ -130,17 +138,65 @@ def handle_object_movies(filename, qt):
             sample_offset += sample_size
 
             # write frame out to the destination mosaic
-            column = sample_id % columns
-            row = sample_id // columns
-            pos = (column * width, row * height)
-            dst.paste(image, pos)
+            number_of_samples_in_previous_image = (rows*columns * image_id)
+            if sample_id >= number_of_samples_in_previous_image:
+                sample_id_calc = sample_id - number_of_samples_in_previous_image
+            else:
+                sample_id_calc = sample_id
 
-    name = filename.name
-    dst.save(f"mosaic-{name}.png")
+            column = sample_id_calc % columns
+            row = sample_id_calc // columns
+            pos = (column * width, row * height)
+
+            dst.paste(image, pos)
+            #print(f'{row}x{column} {sample_id}')
+            if ((sample_id +1) % (rows * columns)) == 0:
+                if rotate:
+                    dst = dst.rotate(rotate, expand=True)
+                dst.save(f"{export_name}-{image_id}.png")
+                dst = Image.new("RGB", (width * columns, height * rows))
+                image_id += 1
+
 
 
 def handle_panorama_movies(filename: Path, qt: QuickTime):
-    pass
+    tracks = get_atoms(qt, trakAtom)
+    d = {get_atom(track, tkhdAtom).obj.track_id: track.obj for track in tracks}
+
+    panoramic_track = get_pano_track(tracks)
+    if not panoramic_track:
+        print("Not a panoramic track")
+        exit(1)
+
+    sample_description = (
+        get_atom(panoramic_track, stsdAtom).obj.sample_description_table[0].atoms[0].obj
+    )
+
+    rows = sample_description.sceneNumFramesX
+    columns = sample_description.sceneNumFramesY
+
+    sceneTrack = d[sample_description.sceneTrackID]
+    hotspotTrack = d[sample_description.hotSpotTrackID]
+
+    print("handling high res track")
+    export_name = f"sceneTrack-{filename.name}"
+    create_mosaic(filename, export_name, rows, columns, sceneTrack, rotate=-90)
+
+    if sample_description.loResSceneTrackID:
+        print("handling lores track")
+        export_name = f"loressceneTrack-{filename.name}"
+        low_res_rows = max(rows // 2, 1)
+
+        loressceneTrack = d[sample_description.loResSceneTrackID]
+
+        create_mosaic(filename, export_name, low_res_rows, columns//2, loressceneTrack, rotate=-90)
+
+    if sample_description.hotSpotTrackID:
+        print("handling hotspot Track")
+        export_name = f"hotspotTrack-{filename.name}"
+        hotspotRows = sample_description.hotSpotNumFramesX
+        hotspotColumns = sample_description.hotSpotNumFramesY
+        create_mosaic(filename, export_name, hotspotRows, hotspotColumns, hotspotTrack, rotate=-90)
 
 
 def main():

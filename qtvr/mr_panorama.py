@@ -21,7 +21,7 @@ class HotSpot(mrc.Block):
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     type                = mrc.UInt32_BE(0x04) # the hotspot type( e.g. link, navg)
     typeData            = mrc.UInt32_BE(0x08) # for link and navg, the ID in the link and navg table
-    
+
     # canonical view for this hot spot
     viewHPan            = AppleFloatField(0x0C)
     viewVPan            = AppleFloatField(0x10)
@@ -54,7 +54,7 @@ class StringTableAtom(mrc.Block):
 
 class PanoSampleHeader(mrc.Block):
     nodeID              = mrc.UInt32_BE(0x00)
-    
+
     # default values when displaying this node
     defHPan             = AppleFloatField(0x04)
     defVPan             = AppleFloatField(0x08)
@@ -67,7 +67,7 @@ class PanoSampleHeader(mrc.Block):
     maxHPan             = AppleFloatField(0x1C)
     maxVPan             = AppleFloatField(0x20)
     maxZoom             = AppleFloatField(0x24)
-    
+
     reserved1           = mrc.Int32_BE(0x28)
     reserved2           = mrc.Int32_BE(0x2C)
     nameStrOffset       = mrc.Int32_BE(0x30)
@@ -82,7 +82,7 @@ class PanoLink(mrc.Block):
     toNodeID            = mrc.UInt32_BE(0x0C)
 
     reserved4           = mrc.Bytes(0x10, length = 4 * 3)
-    
+
     # values to set at the destination node
     toHPan              = AppleFloatField(0x1C)
     toVPan              = AppleFloatField(0x20)
@@ -103,7 +103,7 @@ class NavgObject(mrc.Block):
     objID               = mrc.UInt16_BE(0x00)
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     reserved2           = mrc.UInt32_BE(0x04) # must be zero
-    navgPan             = mrc.UInt32_BE(0x08)           
+    navgPan             = mrc.UInt32_BE(0x08)
     navgZoom            = mrc.UInt32_BE(0x0C)
 
     # zoomRect
@@ -115,7 +115,7 @@ class NavgObject(mrc.Block):
     rect4               = mrc.UInt16_BE(0x16)
 
     reserved3           = mrc.Int32_BE(0x18)
-    
+
     # values to set at the destination node
     nameStrOffset       = mrc.Int32_BE(0x1C)
     commentStrOffset    = mrc.Int32_BE(0x20)
@@ -133,6 +133,7 @@ class PanoramaTrackSample(ContainerAtom):
         FourCC(b"pHot"): HotSpotTableAtom,
         FourCC(b"strT"): StringTableAtom,
         FourCC(b"pLnk"): LinkTableAtom,
+        FourCC(b"pNav"): NavgTableAtom
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -144,17 +145,21 @@ def get_pano_track(tracks: list[trakAtom]) -> trakAtom | None:
     return None
 
 
-def parse_panorama_track_samples(qt: mrc.Block, filename: Path) -> list[PanoramaTrackSample]:
+def parse_panorama_track_samples(qt: mrc.Block, filename: Path) -> list[PanoramaTrackSample] | None:
     tracks = get_atoms(qt, trakAtom)
     panotrack = get_pano_track(tracks)
     if not panotrack:
         print("no panoramic track")
         return None
 
-    stsz_atom = get_atom(panotrack, stszAtom)
-    sizes = [i.size for i in stsz_atom.obj.sample_size_table]
-    stco_atom = get_atom(panotrack, stcoAtom)
-    offsets = [i.pointer for i in stco_atom.obj.chunk_offset_table]
+    stsz_atom = get_atom(panotrack, stszAtom).obj
+    if stsz_atom.sample_size:
+        sizes = [stsz_atom.sample_size]
+    else:
+        sizes = [i.size for i in stsz_atom.sample_size_table]
+
+    stco_atom = get_atom(panotrack, stcoAtom).obj
+    offsets = [i.pointer for i in stco_atom.chunk_offset_table]
 
     track_sampes = []
     f = open(filename, "rb")
@@ -162,6 +167,6 @@ def parse_panorama_track_samples(qt: mrc.Block, filename: Path) -> list[Panorama
         f.seek(offset)
         data = f.read(size)
         track_sampes.append(PanoramaTrackSample(data))
-    
+
     f.close()
     return track_sampes
