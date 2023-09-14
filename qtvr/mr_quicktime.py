@@ -7,7 +7,7 @@ https://multimedia.cx/mirror/qtff-2007-09-04.pdf
 
 import struct
 
-from typing import TypeVar
+from typing import TypeVar, Any
 
 from mrcrowbar import models as mrc
 from mrcrowbar.utils import from_uint32_be as FourCC
@@ -28,6 +28,17 @@ class AppleFloatField(mrc.Field):
         return a + b / 65536
 
 
+class GobbleAtom(mrc.Block):
+    """
+    An atom that gobbles the whole atom.
+
+    This makes it possible to continue parsing atoms which are known
+    after an unkown atom.
+    """
+
+    data = mrc.Bytes()
+
+
 class ContainerAtom(mrc.Block):
     atoms = mrc.ChunkField(
         mrc.Ref("CHUNK_MAP"),
@@ -43,39 +54,62 @@ class ContainerAtom(mrc.Block):
 UNKNOWN_FOURCC = set()
 
 
-def create_knowntype(key, base_class=mrc.Unknown):
+def create_knowntype(key, base_class=GobbleAtom):
+    """
+    Register unkown atom name and create a class for it
+    """
     fourcc = make_fourcc(key)
     UNKNOWN_FOURCC.add(fourcc)
     return type(f"{fourcc}-Unknown", (base_class,), {})
 
 
-def make_fourcc(key):
+def make_fourcc(key: Any) -> str | None:
     if not isinstance(key, int):
-        return False
+        return None
     try:
         return FourCCB(key).decode()
     except UnicodeDecodeError:
-        return False
+        return None
 
 
 class mrcdict(dict):
-    def __getitem__(self, key):
-        retval = super().__getitem__(key)
-        return retval
+    """
+    Dict which creates missing elements as `base_class`.
+
+    It's purpose is to be able to register unkown atoms and continue
+    parsing when encountering an unknown atom.
+
+    From a technical perspective:
+
+    mrc does:
+        if key in dict:
+            default_klass = dict[key]
+    Python handles this as:
+        dict.__contains__(key)
+            -> which in our case returns True for a valid FourCC.
+        dict.__getitem__(key)
+            -> returns the value if there
+            -> if it doesn't find the key it executes:
+        dict.__missing__(key)
+            -> which returns a base_class with the key as its name
+    """
+
+    base_class: mrc.Block = GobbleAtom
 
     def __contains__(self, key):
-        if make_fourcc(key):
+        """
+        Fake having an item when the key is a valid fourCC.
+        """
+        if make_fourcc(key) is not None:
             return True
-
         retval = super().__contains__(key)
         return retval
 
     def __missing__(self, key):
-        return create_knowntype(key)
-
-
-class mrcdict(dict):
-    pass
+        """
+        When encountering a key we don't know about, fake one and continue.
+        """
+        return create_knowntype(key, self.base_class)
 
 
 # fmt: off
@@ -229,6 +263,7 @@ class drefAtom(mrc.Block):
     """
 
     CHUNK_MAP = mrcdict()
+    CHUNK_MAP.base_class = drefSubAtom
     MAPPING = {
         FourCC(b"alis"): drefSubAtom,
         FourCC(b"rsrc"): drefSubAtom,
@@ -239,15 +274,6 @@ class drefAtom(mrc.Block):
     version                  = mrc.UInt8(0x00)
     flags                    = mrc.Bytes(0x01, length=3)
     number_of_entries        = mrc.UInt32_BE(0x04)
-    atoms = mrc.ChunkField(
-        mrc.Ref("CHUNK_MAP"),
-        0x08,
-        id_field=mrc.UInt32_BE,
-        length_field=mrc.UInt32_BE,
-        default_klass=drefSubAtom,
-        length_before_id=True,
-        length_inclusive=True,
-    )
 
 class ChunkOffsetTableEntry(mrc.Block):
     pointer                  = mrc.Int32_BE(0x00)
@@ -521,7 +547,9 @@ class freeAtom(mrc.Block):
     """
     Free space in the file
     """
+
     free = mrc.Bytes()
+
 
 class moovAtom(ContainerAtom):
     """
@@ -548,7 +576,9 @@ class QuickTime(ContainerAtom):
     }
     CHUNK_MAP.update(MAPPING)
 
+
 T = TypeVar("T")
+
 
 def get_atoms(atom, atom_kls: type[T]) -> list[T]:
     atoms = []
@@ -565,7 +595,9 @@ def get_atoms(atom, atom_kls: type[T]) -> list[T]:
                 atoms.extend(get_atoms(parent_atom, atom_kls))
     return atoms
 
+
 from enum import IntEnum, auto
+
 
 def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
     atoms = get_atoms(atom, atom_kls)
@@ -576,6 +608,7 @@ def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
 class QTVRType(IntEnum):
     PANORAMA = auto()
     OBJECT = auto()
+
 
 def is_qtvr(atom: mrc.Block) -> QTVRType | None:
     ctyp = get_atom(atom, ctypAtom)
