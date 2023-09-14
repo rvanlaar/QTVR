@@ -29,14 +29,6 @@ def print_atom(atom, indent=0):
             print_atom(el, indent + 1)
 
 
-def simply_structure(qt: QuickTime):
-    k = dict()
-    for atom in qt.atoms:
-        name = atom.obj.__class__.__name__
-        k[name] = atom
-    return k
-
-
 def parse_file(filename):
     f = open(filename, "rb").read()
     return QuickTime(f)
