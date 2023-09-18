@@ -64,10 +64,10 @@ def create_knowntype(key, base_class=GobbleAtom):
 
 
 def make_fourcc(key: Any) -> str | None:
-    if not isinstance(key, int):
+    if not isinstance(key, bytes):
         return None
     try:
-        return FourCCB(key).decode()
+        return key.decode()
     except UnicodeDecodeError:
         return None
 
