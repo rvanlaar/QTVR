@@ -3,7 +3,7 @@ from pathlib import Path
 
 from . import mr_quicktime
 
-from .mr_quicktime import QuickTime, stblAtom, is_qtvr, QTVRType
+from .mr_quicktime import QuickTime, is_qtvr, QTVRType
 
 
 def print_unkown_fourccs():
@@ -13,14 +13,9 @@ def print_unkown_fourccs():
         print(el)
 
 
-stsd = []
-
-
 def print_atom(atom, indent=0):
     indent_str = ">" * indent
     print(f"{indent_str}{atom}")
-    if hasattr(atom, "obj") and isinstance(atom.obj, stblAtom):
-        stsd.append(atom)
     if hasattr(atom, "atoms"):
         for el in atom.atoms:
             print_atom(el, indent + 1)
