@@ -43,7 +43,7 @@ class ContainerAtom(mrc.Block):
     atoms = mrc.ChunkField(
         mrc.Ref("CHUNK_MAP"),
         0x00,
-        id_field=mrc.UInt32_BE,
+        id_size=4,
         length_field=mrc.UInt32_BE,
         default_klass=mrc.Unknown,
         length_before_id=True,
@@ -354,12 +354,12 @@ class SampleDescriptionTable(ContainerAtom):
     CHUNK_MAP = mrcdict()
     CHUNK_MAP.base_class = VideoSampleDescriptionTableEntry
     MAPPING = {
-        FourCC(b"pano"): PanoSampleDescriptionTableEntry
+        b"pano": PanoSampleDescriptionTableEntry
     }
     # set defaults for known image compression formats
     image_compression_formats = [b"cvid", b"rpza", b"smc ", b"rle ", b"cvid"]
     for codec in image_compression_formats:
-        MAPPING[FourCC(codec)] = VideoSampleDescriptionTableEntry
+        MAPPING[codec] = VideoSampleDescriptionTableEntry
 
     CHUNK_MAP.update(MAPPING)
 
@@ -496,7 +496,7 @@ class pInfAtom(mrc.Block):
 class STpnAtom(ContainerAtom):
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"pInf"): pInfAtom
+        b"pInf": pInfAtom
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -509,8 +509,8 @@ class gmhdAtom(ContainerAtom):
     """
 
     CHUNK_MAP = mrcdict()
-    MAPPING = {FourCC(b"gmin"): gminAtom,
-               FourCC(b"STpn"): STpnAtom}
+    MAPPING = {b"gmin": gminAtom,
+               b"STpn": STpnAtom}
 
     CHUNK_MAP.update(MAPPING)
 
@@ -523,7 +523,7 @@ class dinfAtom(ContainerAtom):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"dref"): drefAtom,
+        b"dref": drefAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -535,12 +535,12 @@ class stblAtom(ContainerAtom):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"stco"): stcoAtom,
-        FourCC(b"stsc"): stscAtom,
-        FourCC(b"stsd"): stsdAtom,
-        FourCC(b"stts"): sttsAtom,
-        FourCC(b"stsz"): stszAtom,
-        FourCC(b"stss"): stssAtom,
+        b"stco": stcoAtom,
+        b"stsc": stscAtom,
+        b"stsd": stsdAtom,
+        b"stts": sttsAtom,
+        b"stsz": stszAtom,
+        b"stss": stssAtom,
     }
 
     CHUNK_MAP.update(MAPPING)
@@ -555,28 +555,28 @@ class minfAtom(ContainerAtom):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"hdlr"): hdlrAtom,
-        FourCC(b"dinf"): dinfAtom,
-        FourCC(b"stbl"): stblAtom,
-        FourCC(b"smhd"): smhdAtom,
-        FourCC(b"vmhd"): vmhdAtom,
-        FourCC(b"gmhd"): gmhdAtom,
+        b"hdlr": hdlrAtom,
+        b"dinf": dinfAtom,
+        b"stbl": stblAtom,
+        b"smhd": smhdAtom,
+        b"vmhd": vmhdAtom,
+        b"gmhd": gmhdAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
 
 class edtsAtom(ContainerAtom):
     CHUNK_MAP = mrcdict()
-    MAPPING = {FourCC(b"elst"): elstAtom}
+    MAPPING = {b"elst": elstAtom}
     CHUNK_MAP.update(MAPPING)
 
 
 class mdiaAtom(ContainerAtom):
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"mdhd"): mdhdAtom,
-        FourCC(b"hdlr"): hdlrAtom,
-        FourCC(b"minf"): minfAtom,
+        b"mdhd": mdhdAtom,
+        b"hdlr": hdlrAtom,
+        b"minf": minfAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -590,9 +590,9 @@ class trakAtom(ContainerAtom):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"mdia"): mdiaAtom,
-        FourCC(b"tkhd"): tkhdAtom,
-        FourCC(b"edts"): edtsAtom,
+        b"mdia": mdiaAtom,
+        b"tkhd": tkhdAtom,
+        b"edts": edtsAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -602,11 +602,11 @@ class ctypAtom(mrc.Block):
     Controller TYPe
     """
 
-    id = mrc.UInt32_BE(0x00)
+    id = mrc.Bytes(0x00 ,length=4)
 
     @property
     def repr(self):
-        _id = FourCCB(self.id).decode()
+        _id = self.id.decode()
         return f"id={_id}"
 
 
@@ -626,16 +626,16 @@ class udtaAtom(mrc.Block):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"ctyp"): ctypAtom,
-        FourCC(b"WLOC"): WLOCAtom,
-        FourCC(b"NAVG"): NAVGAtom,
+        b"ctyp": ctypAtom,
+        b"WLOC": WLOCAtom,
+        b"NAVG": NAVGAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
     atoms = mrc.ChunkField(
         mrc.Ref("CHUNK_MAP"),
         0x00,
-        id_field=mrc.UInt32_BE,
+        id_size=4,
         length_field=mrc.UInt32_BE,
         default_klass=mrc.Unknown,
         length_before_id=True,
@@ -662,9 +662,9 @@ class moovAtom(ContainerAtom):
 
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"mvhd"): mvhdAtom,
-        FourCC(b"trak"): trakAtom,
-        FourCC(b"udta"): udtaAtom,
+        b"mvhd": mvhdAtom,
+        b"trak": trakAtom,
+        b"udta": udtaAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -672,9 +672,9 @@ class moovAtom(ContainerAtom):
 class QuickTime(ContainerAtom):
     CHUNK_MAP = mrcdict()
     MAPPING = {
-        FourCC(b"mdat"): mdatAtom,
-        FourCC(b"moov"): moovAtom,
-        FourCC(b"free"): freeAtom,
+        b"mdat": mdatAtom,
+        b"moov": moovAtom,
+        b"free": freeAtom,
     }
     CHUNK_MAP.update(MAPPING)
 
@@ -716,7 +716,7 @@ class QTVRType(IntEnum):
 
 def is_qtvr(atom: mrc.Block) -> QTVRType | None:
     ctyp = get_atom(atom, ctypAtom)
-    controller_id = FourCCB(ctyp.obj.id)
+    controller_id = ctyp.obj.id
     if controller_id == b"stna":
         return QTVRType.OBJECT
     if controller_id in (b"stpn", b"STpn"):
