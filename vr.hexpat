@@ -331,9 +331,9 @@ struct PanoSampleDescription: Atom {
     // https://developer.apple.com/library/archive/technotes/tn/tn1035.html
     std::print("pano located at: 0x{:X}", addressof(this));
     padding[sizeof(u32)];
-    padding[sizeof(u32)];
+    padding[sizeof(u32)]; // must be zero, sometimes it contains a 1
 
-    s16 majorVersion;
+    s16 majorVersion; // must be zero, sometimes it contains a 1
     s16 minorVersion;
     s32 sceneTrackID;
     s32 loResSceneTrackID;
@@ -370,14 +370,15 @@ struct PanoSampleDescription: Atom {
 
 struct SampleEntrySelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("cvid"): VisualSampleEntry cvid;
         ("smc "): VisualSampleEntry smc;
         ("rle "): VisualSampleEntry rle;
-        ("pano"): PanoSampleDescription  pano;
+        ("pano"): PanoSampleDescription pano;
         ("SVQ1"): VisualSampleEntry svq;
+        //("qtvr"): QTVRSampleDescription qtvr;
         (_):  UnknownSampleEntry unknown [[name(atom_header.box_type)]];
     }
 
