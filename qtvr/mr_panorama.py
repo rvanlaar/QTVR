@@ -5,6 +5,7 @@ from typing import Any
 from mrcrowbar import common
 from mrcrowbar import models as mrc
 from mrcrowbar.lib.platforms.director import Rect
+from mrcrowbar.utils import to_uint32_be as FourCCB
 
 from .mr_quicktime import (
     AppleFloatField,
@@ -44,6 +45,8 @@ class strOffsetRepr:
                     except:
                         breakpoint()
                 output += ">"
+            elif name == "type":
+                output = FourCCB(value).decode()
             elif isinstance(value, str):
                 output = f"str[{len(value)}]"
             elif common.is_bytes(value):
