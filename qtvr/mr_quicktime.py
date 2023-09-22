@@ -45,7 +45,7 @@ class ContainerAtom(mrc.Block):
         0x00,
         id_size=4,
         length_field=mrc.UInt32_BE,
-        default_klass=mrc.Unknown,
+        default_klass=GobbleAtom,
         length_before_id=True,
         length_inclusive=True,
     )
