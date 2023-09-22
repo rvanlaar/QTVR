@@ -114,16 +114,16 @@ struct NAVGAtom: Atom {
     fixed_s32 initialHPan;
     fixed_s32 initialVPan;
     padding[4];
-    
+
 };
 
 // moov -> udta
 struct UserDataChildAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
 
-    match(atom_header.box_type) { 
+    match(atom_header.box_type) {
         ("ctyp"): CTYPAtom ctyp;
         ("NAVG"): NAVGAtom navg;
         (_): UnknownAtom unknown [[name(atom_header.box_type)]];
@@ -281,7 +281,7 @@ struct ChunkOffsetAtom : FullAtom {
 
 struct UnknownSampleEntryChildSelector {
     Atom box_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         (_): UnknownAtom unknown [[name(box_header.box_type)]];
@@ -346,7 +346,7 @@ struct PanoSampleDescription: Atom {
     fixed_s32 vPanBottom; // TODO: number is off...
     fixed_s32 minimumZoom;
     fixed_s32 maximumZoom;
-    
+
     // Info for highest res version of scene track
 
     s32 sceneSizeX;
@@ -356,7 +356,7 @@ struct PanoSampleDescription: Atom {
     s16 sceneNumFramesX;
     s16 sceneNumFramesY;
     s16 sceneColorDepth;
-    
+
     // Info for highest res version of hotSpot track
     s32 hotSpotSizeX;
     s32 hotSpotSizeY;
@@ -471,7 +471,7 @@ using DataReferenceAtom;
 
 struct DataEntryAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("alis"): FullAtom alis;
@@ -488,7 +488,7 @@ struct DataReferenceAtom : FullAtom {
 
 struct DataInformationChildAtomSelector {
     Atom atom_header [[hidden]];
-    
+
     $ = addressof(this);
     match(atom_header.box_type) {
         ("dref"): DataReferenceAtom dref;
@@ -545,7 +545,7 @@ struct STPanoMediaInfoAtom: Atom {
     STPanoMediaInfoChildAtomSelector children[while (contents_size(addressof(this), box_size) > MIN_BOX_SIZE)];
 };
 
-struct GMHDChildAtomSelector { 
+struct GMHDChildAtomSelector {
     Atom atom_header [[hidden]];
 
     $ = addressof(this);
@@ -567,7 +567,7 @@ struct MediaInformationChildAtomSelector {
     Atom atom_header [[hidden]];
 
     $ = addressof(this);
-    
+
     match(atom_header.box_type) {
         ("stbl"): SampleTableAtom stbl;
         ("hdlr"): HandlerAtom hdlr;
