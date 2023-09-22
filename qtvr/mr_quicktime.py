@@ -352,18 +352,18 @@ class PanoSampleDescriptionTableEntry(mrc.Block):
     sceneSizeX               = mrc.UInt32_BE(0x6C)
     sceneSizeY               = mrc.UInt32_BE(0x70)
     numFrames                = mrc.UInt32_BE(0x74)
-    reserved5                = mrc.Int16_BE(0x76)
-    sceneNumFramesX          = mrc.Int16_BE(0x78)
-    sceneNumFramesY          = mrc.Int16_BE(0x7A)
-    sceneColorDepth          = mrc.Int16_BE(0x7C)
+    reserved5                = mrc.Int16_BE(0x78)
+    sceneNumFramesX          = mrc.Int16_BE(0x7A)
+    sceneNumFramesY          = mrc.Int16_BE(0x7C)
+    sceneColorDepth          = mrc.Int16_BE(0x7E)
 
     # info for the highest rest version of hotSpot track
-    hotSpotSizeX             = mrc.Int32_BE(0x7E) # pixel width of the hot spot panorama
-    hotSpotSizeY             = mrc.Int32_BE(0x82) # pixel height of the hot spot panorama
-    reserved6                = mrc.Int16_BE(0x86)
-    hotSpotNumFramesX        = mrc.Int16_BE(0x88) # diced frames wide
-    hotSpotNumFramesY        = mrc.Int16_BE(0x8A) # dices frame high
-    hotSpotColorDepth        = mrc.Int16_BE(0x8C) # must be 8
+    hotSpotSizeX             = mrc.Int32_BE(0x80) # pixel width of the hot spot panorama
+    hotSpotSizeY             = mrc.Int32_BE(0x84) # pixel height of the hot spot panorama
+    reserved6                = mrc.Int16_BE(0x88)
+    hotSpotNumFramesX        = mrc.Int16_BE(0x8A) # diced frames wide
+    hotSpotNumFramesY        = mrc.Int16_BE(0x8C) # dices frame high
+    hotSpotColorDepth        = mrc.Int16_BE(0x8E) # must be 8
 
 
 class SampleDescriptionTable(ContainerAtom):
