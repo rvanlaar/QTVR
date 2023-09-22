@@ -377,6 +377,7 @@ struct SampleEntrySelector {
         ("smc "): VisualSampleEntry smc;
         ("rle "): VisualSampleEntry rle;
         ("pano"): PanoSampleDescription  pano;
+        ("SVQ1"): VisualSampleEntry svq;
         (_):  UnknownSampleEntry unknown [[name(atom_header.box_type)]];
     }
 
