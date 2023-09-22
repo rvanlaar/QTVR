@@ -4,6 +4,7 @@ from pathlib import Path
 from . import mr_quicktime
 
 from .mr_quicktime import QuickTime, is_qtvr, QTVRType
+from .mr_panorama import parse_panorama_track_samples
 
 
 def print_unkown_fourccs():
@@ -55,6 +56,9 @@ def main():
         case QTVRType.OBJECT:
             print("QTVR1: object movie")
         case QTVRType.PANORAMA:
+            track_samples = parse_panorama_track_samples(qt, args.filename)
+            for sample in track_samples:
+                print_atom(sample)
             print("QTVR1: panorama movie")
         case QTVRType.V2:
             print("QTVR: 2 or later")
