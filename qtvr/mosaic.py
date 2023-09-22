@@ -168,7 +168,7 @@ def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
             if ((sample_id + 1) % (rows * columns)) == 0:
                 if rotate:
                     dst = dst.rotate(rotate, expand=True)
-                dst.save(f"{export_name}-{image_id}.png")
+                dst.save(f"{image_id}-{export_name}.png")
                 dst = Image.new("RGB", (width * columns, height * rows))
                 image_id += 1
 
@@ -193,12 +193,12 @@ def handle_panorama_movies(filename: Path, qt: QuickTime):
     hotspotTrack = d[sample_description.hotSpotTrackID]
 
     print("handling high res track")
-    export_name = f"sceneTrack-{filename.name}"
+    export_name = f"{filename.name}-sceneTrack"
     create_mosaic(filename, export_name, rows, columns, sceneTrack, rotate=-90)
 
     if sample_description.loResSceneTrackID:
         print("handling lores track")
-        export_name = f"loressceneTrack-{filename.name}"
+        export_name = f"{filename.name}-loressceneTrack"
         low_res_rows = max(rows // 2, 1)
 
         loressceneTrack = d[sample_description.loResSceneTrackID]
@@ -213,20 +213,18 @@ def handle_panorama_movies(filename: Path, qt: QuickTime):
         )
 
     if sample_description.hotSpotTrackID:
-        print("Skip Hotspot Track: due to not yet supported SMC codec")
-        if False:
-            print("handling hotspot Track")
-            export_name = f"hotspotTrack-{filename.name}"
-            hotspotRows = sample_description.hotSpotNumFramesX
-            hotspotColumns = sample_description.hotSpotNumFramesY
-            create_mosaic(
-                filename,
-                export_name,
-                hotspotRows,
-                hotspotColumns,
-                hotspotTrack,
-                rotate=-90,
-            )
+        print("handling hotspot Track")
+        export_name = f"{filename.name}-hotspotTrack"
+        hotspotRows = sample_description.hotSpotNumFramesX
+        hotspotColumns = sample_description.hotSpotNumFramesY
+        create_mosaic(
+            filename,
+            export_name,
+            hotspotRows,
+            hotspotColumns,
+            hotspotTrack,
+            rotate=-90,
+        )
 
 
 def main():
