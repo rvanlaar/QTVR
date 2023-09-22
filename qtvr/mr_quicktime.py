@@ -257,23 +257,38 @@ class drefSubAtom(mrc.Block):
     data                     = mrc.Bytes(0x05)
 
 
-class drefAtom(mrc.Block):
-    """
-    Data REFerance Atom
-    """
-
+class drefSubContainer(mrc.Block):
     CHUNK_MAP = mrcdict()
     CHUNK_MAP.base_class = drefSubAtom
     MAPPING = {
-        FourCC(b"alis"): drefSubAtom,
-        FourCC(b"rsrc"): drefSubAtom,
-        FourCC(b"url "): drefSubAtom
+        b"alis": drefSubAtom,
+        b"rsrc": drefSubAtom,
+        b"url ": drefSubAtom
     }
     CHUNK_MAP.update(MAPPING)
+
+    atoms = mrc.ChunkField(
+        mrc.Ref("CHUNK_MAP"),
+        0x00,
+        id_size=4,
+        length_field=mrc.UInt32_BE,
+        default_klass=drefSubAtom,
+        length_before_id=True,
+        length_inclusive=True,
+    )
+
+
+class drefAtom(mrc.Block):
+    """
+    Data REFerance Atom
+
+    #ToDo: map out entries
+    """
 
     version                  = mrc.UInt8(0x00)
     flags                    = mrc.Bytes(0x01, length=3)
     number_of_entries        = mrc.UInt32_BE(0x04)
+    drefs                    = mrc.BlockField(drefSubContainer, 0x08, count=mrc.Ref("number_of_entries"))
 
 class ChunkOffsetTableEntry(mrc.Block):
     pointer                  = mrc.Int32_BE(0x00)
