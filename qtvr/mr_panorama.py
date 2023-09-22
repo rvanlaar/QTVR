@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from mrcrowbar import common
 from mrcrowbar import models as mrc
@@ -20,12 +21,12 @@ from .mr_quicktime import (
 
 class strOffsetRepr:
     @property
-    def repr( self ) -> str | None:
+    def repr(self) -> str | None:
         """Plaintext summary of the Block."""
         value_map: dict[str, Any] = {}
-        if self._repr_values and isinstance( self._repr_values, list ):
+        if self._repr_values and isinstance(self._repr_values, list):
             value_map = {
-                x: getattr( self, x ) for x in self._repr_values if hasattr( self, x )
+                x: getattr(self, x) for x in self._repr_values if hasattr(self, x)
             }
         else:
             value_map = {k: v for k, v in self._field_data.items()}
@@ -43,16 +44,17 @@ class strOffsetRepr:
                     except:
                         breakpoint()
                 output += ">"
-            elif isinstance( value, str ):
+            elif isinstance(value, str):
                 output = f"str[{len(value)}]"
-            elif common.is_bytes( value ):
+            elif common.is_bytes(value):
                 output = f"bytes[{len(value)}]"
-            elif isinstance( value, Sequence ):
+            elif isinstance(value, Sequence):
                 output = f"list[{len(value)}]"
             else:
-                output = str( value )
-            values.append( f"{name}={output}" )
-        return ", ".join( values )
+                output = str(value)
+            values.append(f"{name}={output}")
+        return ", ".join(values)
+
 
 # fmt: off
 
