@@ -25,13 +25,28 @@ from .mr_quicktime import (
     tkhdAtom,
     trakAtom,
 )
+from .qt_palette import get_palette
 
-formats = {"rpza": "rpza", "rle ": "qtrle", "cvid": "cinepak"}
+formats = {"rpza": "rpza", "rle ": "qtrle", "cvid": "cinepak", "smc ": "smc"}
 
 
 def create_image(codec: av.codec.Codec, data: bytes) -> Image:
     p = av.Packet(data)
     frame = codec.decode(p)[0]
+
+    if codec.name == "smc" and codec.bits_per_coded_sample == 8:
+        # smc is only seen in hotspots tracks, which per definition are 8 bits
+
+        # Frame consists of two numpy arrays.
+        # first one is the frame data, second one is the palette.
+        # because ffmpeg doesn't see the qt container, it doesn't know
+        # which palette to use. We use the default qt 8 bit depth palette
+
+        pal = get_palette()
+        img = Image.fromarray(frame.to_ndarray()[0])
+        img.putpalette(pal)
+        return img
+
     return frame.to_image()
 
 
