@@ -16,6 +16,9 @@ ipdb = "*"
 black = "*"
 pre-commit = "^3.4.0"
 
+[tool.isort]
+profile = "black"
+
 [tool.poetry.scripts]
 decode_cinepak = "qtvr.decoders.cinepak:main"
 print_atoms = "qtvr.print_atoms:main"
