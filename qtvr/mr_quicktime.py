@@ -100,6 +100,7 @@ class mrcdict(dict):
         """
         Fake having an item when the key is a valid fourCC.
         """
+
         if make_fourcc(key) is not None:
             return True
         retval = super().__contains__(key)
