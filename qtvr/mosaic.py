@@ -26,7 +26,7 @@ from .mr_quicktime import (
     QTVRType,
 )
 
-formats = {"rpza": "rpza", "rle ": "qtrle", "cine": "cinepak"}
+formats = {"rpza": "rpza", "rle ": "qtrle", "cvid": "cinepak"}
 
 
 def create_image(codec: av.codec.Codec, data: bytes) -> Image:
