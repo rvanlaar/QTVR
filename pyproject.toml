@@ -9,12 +9,12 @@ python = "^3.10"
 mrcrowbar = {git = "https://github.com/moralrecordings/mrcrowbar"}
 numpy = "^1.25.2"
 pillow = "^10.0.0"
-av = {path = "../PyAV/dist/av-10.0.0-cp310-cp310-linux_x86_64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
 ipdb = "*"
 black = "*"
+pre-commit = "^3.4.0"
 
 [tool.poetry.scripts]
 decode_cinepak = "qtvr.decoders.cinepak:main"
