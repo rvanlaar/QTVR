@@ -720,7 +720,7 @@ def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
     atoms = get_atoms(atom, atom_kls)
     assert len(atoms) <= 1
     if atoms:
-        return atoms[0]
+        return atoms[0].obj
     return None
 
 class QTVRType(IntEnum):
@@ -731,7 +731,7 @@ class QTVRType(IntEnum):
 
 def is_qtvr(atom: mrc.Block) -> QTVRType | None:
     ctyp = get_atom(atom, ctypAtom)
-    controller_id = ctyp.obj.id
+    controller_id = ctyp.id
     if controller_id == b"stna":
         return QTVRType.OBJECT
     if controller_id in (b"stpn", b"STpn"):

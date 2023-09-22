@@ -60,6 +60,6 @@ def main():
     if len(ctype) != 1:
         print("Not a QTVR 1 movie")
         exit(0)
-    controller_id = FourCCB(ctype[0].obj.id)
+    controller_id = ctype[0].obj.id
     if controller_id == b"stna":
         handle_object_movies(args.filename, qt)

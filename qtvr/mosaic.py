@@ -56,17 +56,17 @@ def handle_object_movies(filename, qt):
     trak_atom = get_atom(qt, trakAtom)
 
     trak_header = get_atom(trak_atom, tkhdAtom)
-    width = int(trak_header.obj.track_width)
-    height = int(trak_header.obj.track_height)
+    width = int(trak_header.track_width)
+    height = int(trak_header.track_height)
 
     print(f"width: {width}\nheight: {height}")
     sample_table = get_atom(trak_atom, stblAtom)
     # Note: handle samples per chunk in stsc atom
-    sample_size_table = get_atom(sample_table, stszAtom).obj.sample_size_table
-    chunk_offset_table = get_atom(sample_table, stcoAtom).obj.chunk_offset_table
+    sample_size_table = get_atom(sample_table, stszAtom).sample_size_table
+    chunk_offset_table = get_atom(sample_table, stcoAtom).chunk_offset_table
     sample_description_table = get_atom(
         sample_table, stsdAtom
-    ).obj.sample_description_table[0]
+    ).sample_description_table[0]
 
     data_format = FourCCB(sample_description_table.data_format).decode("ASCII")
     sample_description_entry = sample_description_table.atoms[0].obj
@@ -82,7 +82,7 @@ def handle_object_movies(filename, qt):
     codec.height = height
     codec.bits_per_coded_sample = depth
 
-    stsc = get_atom(sample_table, stscAtom).obj
+    stsc = get_atom(sample_table, stscAtom)
     samples_per_chunk = stsc.sample_to_chunk_table[0].samples_per_chunk
 
     sample_chunk_table = [
