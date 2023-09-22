@@ -728,3 +728,94 @@ struct RootAtom {
 } [[inline]];
 
 RootAtom atoms[while(std::mem::size() - $ > MIN_BOX_SIZE)] @ 0x00 [[format("format_box_array")]];
+
+struct HotSpotEntry {
+    u16 hotSpotId;
+    padding[2];
+    char type[4];
+    u32 typeData;
+    fixed_s32 viewHPan;
+    fixed_s32 viewVPan;
+    fixed_s32 viewZoom;
+    u16 rect1;
+    u16 rect2;
+    u16 rect3;
+    u16 rect4;
+    s32 mouseOVerCursorID;
+    s32 mouseDownCursorID;
+    s32 mouseUpCursorID;
+    padding[sizeof(s32)];
+    s32 nameStrOffset;
+    s32 commentStrOffset;
+};
+
+struct pHot: Atom {
+    padding[2];
+    u16 numHotSpots;
+    HotSpotEntry entries[numHotSpots];
+};
+
+struct pHdr: Atom {
+    u32 nodeID;
+    fixed_s32 defHPan;
+    fixed_s32 defVPan;
+    fixed_s32 defZoom;
+    fixed_s32 minHPan;
+    fixed_s32 minVPan;
+    fixed_s32 minZoom;
+    fixed_s32 maxHPan;
+    fixed_s32 maxVPan;
+    fixed_s32 maxZoom;
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 nameStrOffset;
+    u32 commentStrOffset;
+};
+
+struct PanoLink {
+    u16 linkID;
+    padding[sizeof(u16)];
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 toNodeID;
+    padding[sizeof(u32) * 3];
+    fixed_s32 toHPan;
+    fixed_s32 toVPan;
+    fixed_s32 toZoom;
+    padding[sizeof(u32)];
+    padding[sizeof(u32)];
+    u32 nameStrOffset;
+    u32 commentStrOffset;
+};
+
+struct LinkTableAtom : Atom {
+    padding[sizeof(u16)];
+    u16 numLinks;
+    PanoLink entries[numLinks];
+};
+
+struct PascalString {
+    std::string::SizedString<u8> name;
+};
+
+struct StringTableAtom : Atom {
+    PascalString children[while (contents_size(addressof(this), box_size) > MIN_BOX_SIZE)];
+};
+
+struct PanoramaMDAT {
+    Atom atom_header [[hidden]];
+    $ = addressof(this);
+    if ($ + contents_size(addressof(this), atom_header.box_size) <= std::mem::size()) {
+
+        match(atom_header.box_type) {
+            ("pHot"): pHot phot;
+            ("pHdr"): pHdr phdr;
+            ("pLnk"): LinkTableAtom plnk;
+            ("strT"): StringTableAtom strt;
+            (_): UnknownAtomSelector unknown [[name(atom_header.box_type)]];
+        }
+    } else {
+        $ = std::mem::size();
+    }
+
+} [[inline]];
