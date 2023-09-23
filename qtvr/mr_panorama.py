@@ -172,24 +172,25 @@ class NavgObject(strOffsetRepr, mrc.Block):
     objID               = mrc.UInt16_BE(0x00)
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     reserved2           = mrc.UInt32_BE(0x04) # must be zero
-    navgPan             = mrc.UInt32_BE(0x08)
-    navgZoom            = mrc.UInt32_BE(0x0C)
+    navgHPan            = mrc.UInt32_BE(0x08)
+    navgVPan            = mrc.UInt32_BE(0x0C)
+    navgZoom            = mrc.UInt32_BE(0x10)
 
     # zoomRect
     # starting rect for zoom out transition
-    rect                = mrc.BlockField(Rect, 0x10)
+    rect                = mrc.BlockField(Rect, 0x14)
 
-    reserved3           = mrc.Int32_BE(0x18)
+    reserved3           = mrc.Int32_BE(0x1C)
 
     # values to set at the destination node
-    nameStrOffset       = mrc.Int32_BE(0x1C)
-    commentStrOffset    = mrc.Int32_BE(0x20)
+    nameStrOffset       = mrc.Int32_BE(0x20)
+    commentStrOffset    = mrc.Int32_BE(0x24)
 
 
 class NavgTableAtom(mrc.Block):
     pad                 = mrc.Bytes(0x00, length=2) # must be zero
     numObjects          = mrc.Int16_BE(0x02)
-    NavgObject          = mrc.BlockField(PanoLink, 0x04, count=mrc.Ref("numObjects"))
+    NavgObject          = mrc.BlockField(NavgObject, 0x04, count=mrc.Ref("numObjects"))
 
     def __repr__(self):
         ret = super().__repr__()
