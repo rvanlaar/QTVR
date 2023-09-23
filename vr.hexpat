@@ -795,6 +795,28 @@ struct LinkTableAtom : Atom {
     PanoLink entries[numLinks];
 };
 
+struct NavgObject {
+    u16 objID;
+    padding[sizeof(u16)]; // reserved1
+    padding[sizeof(u32)]; // reserved2
+    fixed_s32 navgHPan;
+    fixed_s32 navgVPan;
+    fixed_s32 navgZoom;
+    u16 rect1;
+    u16 rect2;
+    u16 rect3;
+    u16 rect4;
+    padding[sizeof(u32)]; // reserved3
+    u32 nameStrOffset;
+    u32 commentStrOffset;
+};
+
+struct NavgTableAtom : Atom {
+    padding[sizeof(u16)];
+    u16 numObjects;
+    NavgObject entries[numObjects];
+};
+
 struct PascalString {
     std::string::SizedString<u8> name;
 };
@@ -813,6 +835,7 @@ struct PanoramaMDAT {
             ("pHdr"): pHdr phdr;
             ("pLnk"): LinkTableAtom plnk;
             ("strT"): StringTableAtom strt;
+            ("pNav"): NavgTableAtom pnav;
             (_): UnknownAtomSelector unknown [[name(atom_header.box_type)]];
         }
     } else {
