@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-
-# https://multimedia.cx/rpza.txt
-
 import argparse
 from pathlib import Path
 
