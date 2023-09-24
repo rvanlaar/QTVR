@@ -190,7 +190,6 @@ def handle_panorama_movies(filename: Path, qt: QuickTime):
     columns = sample_description.sceneNumFramesY
 
     sceneTrack = d[sample_description.sceneTrackID]
-    hotspotTrack = d[sample_description.hotSpotTrackID]
 
     print("handling high res track")
     export_name = f"{filename.name}-sceneTrack"
@@ -217,6 +216,8 @@ def handle_panorama_movies(filename: Path, qt: QuickTime):
         export_name = f"{filename.name}-hotspotTrack"
         hotspotRows = sample_description.hotSpotNumFramesX
         hotspotColumns = sample_description.hotSpotNumFramesY
+        hotspotTrack = d[sample_description.hotSpotTrackID]
+
         create_mosaic(
             filename,
             export_name,
