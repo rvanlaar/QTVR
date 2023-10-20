@@ -5,7 +5,7 @@ description = ""
 authors = ["Roland van Laar <roland@rolandvanlaar.nl>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">= 3.10, < 3.13"
 mrcrowbar = {git = "https://github.com/moralrecordings/mrcrowbar"}
 numpy = "^1.25.2"
 pillow = "^10.0.0"
