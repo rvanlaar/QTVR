@@ -10,6 +10,9 @@ mrcrowbar = {git = "https://github.com/moralrecordings/mrcrowbar"}
 numpy = "^1.25.2"
 pillow = "^10.0.0"
 pyav = "^11.3.0"
+pygfx = "^0.2.0"
+scipy = "^1.13.1"
+glfw = "^2.7.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
