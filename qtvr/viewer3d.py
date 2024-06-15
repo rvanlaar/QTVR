@@ -97,11 +97,8 @@ class FixedController(gfx.Controller):
 
         assert isinstance(delta, tuple) and len(delta) == 2
 
-        # print(f"vecx: {vecx} vecy: {vecy}")
-        # print(f"delta {delta}")
-
-        self.horizontal_position += -vecx[0] * delta[0]
-        self.vertical_position += vecy[1] * delta[1]
+        self.horizontal_position += -delta[0]
+        self.vertical_position += delta[1]
 
         X = self.vertical_position
         Y = self.horizontal_position
