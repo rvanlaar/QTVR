@@ -61,8 +61,8 @@ def handle_object_movies(filename, qt):
         exit(1)
 
     navg = navg_list[0]
-    columns: int = navg.obj.columns
-    rows: int = navg.obj.rows
+    columns: int = navg.columns
+    rows: int = navg.rows
 
     print(f"Is object movie: {columns}x{rows}")
 
@@ -173,7 +173,7 @@ def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
 
 def handle_panorama_movies(filename: Path, qt: QuickTime):
     tracks = get_atoms(qt, trakAtom)
-    d = {get_atom(track, tkhdAtom).track_id: track.obj for track in tracks}
+    d = {get_atom(track, tkhdAtom).track_id: track for track in tracks}
 
     panoramic_track = get_pano_track(tracks)
     if not panoramic_track:

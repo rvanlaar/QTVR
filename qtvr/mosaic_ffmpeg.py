@@ -3,10 +3,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from mrcrowbar.utils import to_uint32_be as FourCCB
 
 from .human_sort import human_sort
-from .mr_quicktime import NAVGAtom, QuickTime, ctypAtom, get_atoms
+from .mr_quicktime import NAVGAtom, QuickTime, ctypAtom, get_atoms, get_atom
 
 
 def parse_file(filename):
@@ -22,8 +21,8 @@ def handle_object_movies(filename, qt):
         exit(0)
 
     navg = navg_list[0]
-    columns: int = navg.obj.columns
-    rows: int = navg.obj.rows
+    columns: int = navg.columns
+    rows: int = navg.rows
 
     print(f"Is object movie: {columns}x{rows}")
 
@@ -56,10 +55,10 @@ def main():
     args = parser.parse_args()
 
     qt = parse_file(args.filename)
-    ctype = get_atoms(qt, ctypAtom)
-    if len(ctype) != 1:
+    ctype = get_atom(qt, ctypAtom)
+    if ctype is None:
         print("Not a QTVR 1 movie")
         exit(0)
-    controller_id = ctype[0].obj.id
+    controller_id = ctype.id
     if controller_id == b"stna":
         handle_object_movies(args.filename, qt)

@@ -40,7 +40,7 @@ class GobbleAtom(mrc.Block):
 
 class ContainerAtom(mrc.Block):
     CHUNK_MAP: dict
-    atoms = mrc.ChunkField(
+    atoms: list[mrc.Chunk] = mrc.ChunkField(  # pyright: ignore[reportAssignmentType]
         mrc.Ref("CHUNK_MAP"),  # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
@@ -258,7 +258,7 @@ class drefSubAtom(mrc.Block):
     data                     = mrc.Bytes(0x05)
 
 
-class drefSubContainer(mrc.Block):
+class drefSubContainer(ContainerAtom):
     CHUNK_MAP = mrcdict()
     CHUNK_MAP.base_class = drefSubAtom
     MAPPING = {
@@ -268,7 +268,7 @@ class drefSubContainer(mrc.Block):
     }
     CHUNK_MAP.update(MAPPING)
 
-    atoms = mrc.ChunkField(
+    atoms = mrc.ChunkField( # pyright: ignore[reportAssignmentType]
         mrc.Ref("CHUNK_MAP"), # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
@@ -636,7 +636,7 @@ class WLOCAtom(mrc.Block):
     y = mrc.UInt16_BE(0x02)
 
 
-class udtaAtom(mrc.Block):
+class udtaAtom(ContainerAtom):
     """
     User DaTA Atom
     """
@@ -649,12 +649,12 @@ class udtaAtom(mrc.Block):
     }
     CHUNK_MAP.update(MAPPING)
 
-    atoms = mrc.ChunkField(
+    atoms = mrc.ChunkField(  # pyright: ignore[reportAssignmentType]
         mrc.Ref("CHUNK_MAP"),  # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
         length_field=mrc.UInt32_BE,
-        default_klass=mrc.Unknown,
+        default_klass=GobbleAtom,
         length_before_id=True,
         length_inclusive=True,
         stream_end=b"\x00\x00\x00\x00",
@@ -696,22 +696,16 @@ class QuickTime(ContainerAtom):
     CHUNK_MAP.update(MAPPING)
 
 
-T = TypeVar("T")
+T = TypeVar("T", bound=mrc.Block)
 
 
 def get_atoms(atom, atom_kls: type[T]) -> list[T]:
-    atoms = []
+    atoms: list[T] = []
     if isinstance(atom, atom_kls):
         atoms.append(atom)
-    if hasattr(atom, "atoms"):
+    if isinstance(atom, ContainerAtom):
         for parent_atom in atom.atoms:
-            atoms.extend(get_atoms(parent_atom, atom_kls))
-    if hasattr(atom, "obj"):
-        if isinstance(atom.obj, atom_kls):
-            atoms.append(atom)
-        if hasattr(atom.obj, "atoms"):
-            for parent_atom in atom.obj.atoms:
-                atoms.extend(get_atoms(parent_atom, atom_kls))
+            atoms.extend(get_atoms(parent_atom.obj, atom_kls))
     return atoms
 
 
@@ -719,7 +713,7 @@ def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T | None:
     atoms = get_atoms(atom, atom_kls)
     assert len(atoms) <= 1
     if atoms:
-        return atoms[0].obj
+        return atoms[0]
     return None
 
 
