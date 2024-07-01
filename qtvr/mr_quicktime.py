@@ -699,13 +699,13 @@ class QuickTime(ContainerAtom):
 T = TypeVar("T", bound=mrc.Block)
 
 
-def get_atoms(atom, atom_kls: type[T]) -> list[T]:
+def get_atoms(atom: mrc.Block, atom_kls: type[T]) -> list[T]:
     atoms: list[T] = []
     if isinstance(atom, atom_kls):
         atoms.append(atom)
     if isinstance(atom, ContainerAtom):
-        for parent_atom in atom.atoms:
-            atoms.extend(get_atoms(parent_atom.obj, atom_kls))
+        for chunk in atom.atoms:
+            atoms.extend(get_atoms(chunk.obj, atom_kls))
     return atoms
 
 
@@ -715,6 +715,12 @@ def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T | None:
     if atoms:
         return atoms[0]
     return None
+
+
+def get_atom_assert(atom: mrc.Block, atom_kls: type[T]) -> T:
+    ret_val = get_atom(atom, atom_kls)
+    assert ret_val
+    return ret_val
 
 
 class QTVRType(IntEnum):

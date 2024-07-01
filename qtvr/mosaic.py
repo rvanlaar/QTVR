@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 
 import av
+from av.codec import Codec
+
 from mrcrowbar.utils import to_uint32_be as FourCCB
 from PIL import Image
 
@@ -14,6 +16,7 @@ from .mr_quicktime import (
     QuickTime,
     get_atom,
     get_atoms,
+    get_atom_assert,
     is_qtvr,
     stblAtom,
     stcoAtom,
@@ -28,7 +31,7 @@ from .qt_palette import get_palette
 formats = {"rpza": "rpza", "rle ": "qtrle", "cvid": "cinepak", "smc ": "smc"}
 
 
-def create_image(codec: av.codec.Codec, data: bytes) -> Image:
+def create_image(codec: Codec, data: bytes) -> Image.Image:
     p = av.Packet(data)
     frame = codec.decode(p)[0]
 
@@ -74,16 +77,16 @@ def handle_object_movies(filename, qt):
 
 
 def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
-    trak_header = get_atom(trak_atom, tkhdAtom)
+    trak_header = get_atom_assert(trak_atom, tkhdAtom)
     width = int(trak_header.track_width)
     height = int(trak_header.track_height)
 
     print(f"width: {width}\nheight: {height}")
-    sample_table = get_atom(trak_atom, stblAtom)
+    sample_table = get_atom_assert(trak_atom, stblAtom)
     # Note: handle samples per chunk in stsc atom
-    sample_size_table = get_atom(sample_table, stszAtom).sample_size_table
-    chunk_offset_table = get_atom(sample_table, stcoAtom).chunk_offset_table
-    sample_description_table = get_atom(
+    sample_size_table = get_atom_assert(sample_table, stszAtom).sample_size_table
+    chunk_offset_table = get_atom_assert(sample_table, stcoAtom).chunk_offset_table
+    sample_description_table = get_atom_assert(
         sample_table, stsdAtom
     ).sample_description_table[0]
 
@@ -102,7 +105,7 @@ def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
     codec.height = height
     codec.bits_per_coded_sample = depth
 
-    stsc = get_atom(sample_table, stscAtom)
+    stsc = get_atom_assert(sample_table, stscAtom)
     samples_per_chunk = stsc.sample_to_chunk_table[0].samples_per_chunk
 
     sample_chunk_table = [
@@ -173,7 +176,7 @@ def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
 
 def handle_panorama_movies(filename: Path, qt: QuickTime):
     tracks = get_atoms(qt, trakAtom)
-    d = {get_atom(track, tkhdAtom).track_id: track for track in tracks}
+    d = {get_atom_assert(track, tkhdAtom).track_id: track for track in tracks}
 
     panoramic_track = get_pano_track(tracks)
     if not panoramic_track:
@@ -181,7 +184,10 @@ def handle_panorama_movies(filename: Path, qt: QuickTime):
         exit(1)
 
     sample_description = (
-        get_atom(panoramic_track, stsdAtom).sample_description_table[0].atoms[0].obj
+        get_atom_assert(panoramic_track, stsdAtom)
+        .sample_description_table[0]
+        .atoms[0]
+        .obj
     )
 
     rows = sample_description.sceneNumFramesX
