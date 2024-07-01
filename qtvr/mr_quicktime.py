@@ -6,11 +6,10 @@ https://multimedia.cx/mirror/qtff-2007-09-04.pdf
 """
 
 import struct
-
-from typing import TypeVar, Any
+from typing import Any, TypeVar
+from enum import IntEnum, auto
 
 from mrcrowbar import models as mrc
-from mrcrowbar.utils import from_uint32_be as FourCC
 from mrcrowbar.utils import to_uint32_be as FourCCB
 
 
@@ -40,8 +39,9 @@ class GobbleAtom(mrc.Block):
 
 
 class ContainerAtom(mrc.Block):
+    CHUNK_MAP: dict
     atoms = mrc.ChunkField(
-        mrc.Ref("CHUNK_MAP"),
+        mrc.Ref("CHUNK_MAP"),  # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
         length_field=mrc.UInt32_BE,
@@ -54,7 +54,7 @@ class ContainerAtom(mrc.Block):
 UNKNOWN_FOURCC = set()
 
 
-def create_knowntype(key, base_class=GobbleAtom):
+def create_knowntype(key, base_class: type[mrc.Block] = GobbleAtom) -> type[mrc.Block]:
     """
     Register unkown atom name and create a class for it
     """
@@ -94,7 +94,7 @@ class mrcdict(dict):
             -> which returns a base_class with the key as its name
     """
 
-    base_class: mrc.Block = GobbleAtom
+    base_class: type[mrc.Block] = GobbleAtom
 
     def __contains__(self, key):
         """
@@ -269,7 +269,7 @@ class drefSubContainer(mrc.Block):
     CHUNK_MAP.update(MAPPING)
 
     atoms = mrc.ChunkField(
-        mrc.Ref("CHUNK_MAP"),
+        mrc.Ref("CHUNK_MAP"), # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
         length_field=mrc.UInt32_BE,
@@ -369,7 +369,7 @@ class PanoSampleDescriptionTableEntry(mrc.Block):
 class SampleDescriptionTable(ContainerAtom):
     CHUNK_MAP = mrcdict()
     CHUNK_MAP.base_class = VideoSampleDescriptionTableEntry
-    MAPPING = {
+    MAPPING: dict[bytes, type[PanoSampleDescriptionTableEntry] | type[VideoSampleDescriptionTableEntry]] = {
         b"pano": PanoSampleDescriptionTableEntry
     }
     # set defaults for known image compression formats
@@ -532,6 +532,7 @@ class gmhdAtom(ContainerAtom):
 
 # fmt: on
 
+
 class dinfAtom(ContainerAtom):
     """
     DataINFormation
@@ -618,7 +619,7 @@ class ctypAtom(mrc.Block):
     Controller TYPe
     """
 
-    id = mrc.Bytes(0x00 ,length=4)
+    id = mrc.Bytes(0x00, length=4)
 
     @property
     def repr(self):
@@ -649,7 +650,7 @@ class udtaAtom(mrc.Block):
     CHUNK_MAP.update(MAPPING)
 
     atoms = mrc.ChunkField(
-        mrc.Ref("CHUNK_MAP"),
+        mrc.Ref("CHUNK_MAP"),  # pyright: ignore[reportArgumentType]
         0x00,
         id_size=4,
         length_field=mrc.UInt32_BE,
@@ -714,15 +715,13 @@ def get_atoms(atom, atom_kls: type[T]) -> list[T]:
     return atoms
 
 
-from enum import IntEnum, auto
-
-
-def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T:
+def get_atom(atom: mrc.Block, atom_kls: type[T]) -> T | None:
     atoms = get_atoms(atom, atom_kls)
     assert len(atoms) <= 1
     if atoms:
         return atoms[0].obj
     return None
+
 
 class QTVRType(IntEnum):
     PANORAMA = auto()
@@ -732,6 +731,8 @@ class QTVRType(IntEnum):
 
 def is_qtvr(atom: mrc.Block) -> QTVRType | None:
     ctyp = get_atom(atom, ctypAtom)
+    if ctyp is None:
+        return None
     controller_id = ctyp.id
     if controller_id == b"stna":
         return QTVRType.OBJECT

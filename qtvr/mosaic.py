@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
@@ -46,7 +48,7 @@ def create_image(codec: av.codec.Codec, data: bytes) -> Image:
     return frame.to_image()
 
 
-def parse_file(filename: Path):
+def parse_file(filename: Path) -> QuickTime:
     with open(filename, "rb") as f:
         qt = QuickTime(f.read())
     return qt
@@ -92,7 +94,7 @@ def create_mosaic(filename, export_name, columns, rows, trak_atom, rotate=0):
     ffmpeg_codec = formats.get(data_format, None)
     if ffmpeg_codec is None:
         print(f"Unknown file format: {data_format}")
-        print(f"Can only handle RPZA, cinepak and RLE movies.")
+        print("Can only handle RPZA, cinepak and RLE movies.")
         exit(1)
 
     codec = av.Codec(ffmpeg_codec, "r").create()

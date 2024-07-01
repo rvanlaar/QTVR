@@ -20,7 +20,7 @@ from .mr_quicktime import (
 )
 
 
-class strOffsetRepr:
+class strOffsetReprBlock(mrc.Block):
     @property
     def repr(self) -> str | None:
         """Plaintext summary of the Block."""
@@ -37,12 +37,16 @@ class strOffsetRepr:
                 output = f"<offset={value}"
                 if value != 0:
                     item = self
-                    while not isinstance(item._parent, PanoramaTrackSample):
+                    while item is not None and not isinstance(
+                        item._parent, PanoramaTrackSample
+                    ):
                         item = item._parent
                     try:
+                        assert item and isinstance(item._parent, PanoramaTrackSample)
                         st_atom = get_atom(item._parent, StringTableAtom)
-                        output += f", str={st_atom.get_string(value)}"
-                    except:
+                        if st_atom:
+                            output += f", str={st_atom.get_string(value)}"
+                    except Exception:
                         breakpoint()
                 output += ">"
             elif name == "type":
@@ -61,7 +65,7 @@ class strOffsetRepr:
 
 # fmt: off
 
-class HotSpot(strOffsetRepr, mrc.Block):
+class HotSpot(strOffsetReprBlock):
     hotSpotID           = mrc.UInt16_BE(0x00)
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     type                = mrc.UInt32_BE(0x04) # the hotspot type(e.g. link, navg)
@@ -111,7 +115,7 @@ class StringTableAtom(mrc.Block):
         return self.bunchOfStrings[str_start: str_end].decode()
 
 
-class PanoSampleHeader(strOffsetRepr, mrc.Block):
+class PanoSampleHeader(strOffsetReprBlock):
     nodeID              = mrc.UInt32_BE(0x00)
 
     # default values when displaying this node
@@ -133,7 +137,7 @@ class PanoSampleHeader(strOffsetRepr, mrc.Block):
     commentStrOffset    = mrc.Int32_BE(0x34)
 
 
-class PanoLink(strOffsetRepr, mrc.Block):
+class PanoLink(strOffsetReprBlock):
     LinkID              = mrc.UInt16_BE(0x00)
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     reserved2           = mrc.UInt32_BE(0x04) # must be zero
@@ -168,7 +172,7 @@ class LinkTableAtom(mrc.Block):
         return "\n".join([ret, *items])
 
 
-class NavgObject(strOffsetRepr, mrc.Block):
+class NavgObject(strOffsetReprBlock):
     objID               = mrc.UInt16_BE(0x00)
     reserved1           = mrc.UInt16_BE(0x02) # must be zero
     reserved2           = mrc.UInt32_BE(0x04) # must be zero
@@ -223,20 +227,22 @@ def get_pano_track(tracks: list[trakAtom]) -> trakAtom | None:
 
 def parse_panorama_track_samples(
     qt: mrc.Block, filename: Path
-) -> list[PanoramaTrackSample] | None:
+) -> list[PanoramaTrackSample]:
     tracks = get_atoms(qt, trakAtom)
     panotrack = get_pano_track(tracks)
     if not panotrack:
         print("no panoramic track")
-        return None
+        return []
 
     stsz_atom = get_atom(panotrack, stszAtom)
+    assert stsz_atom is not None
     if stsz_atom.sample_size:
         sizes = [stsz_atom.sample_size]
     else:
         sizes = [i.size for i in stsz_atom.sample_size_table]
 
     stco_atom = get_atom(panotrack, stcoAtom)
+    assert stco_atom
     offsets = [i.pointer for i in stco_atom.chunk_offset_table]
 
     track_sampes = []
