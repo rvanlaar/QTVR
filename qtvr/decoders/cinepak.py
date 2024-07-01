@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from io import BufferedReader
+
 import argparse
 import struct
 from dataclasses import dataclass
@@ -12,16 +14,16 @@ import numpy as np
 from PIL import Image
 
 
-def read_int(f, size):
+def read_int(f: BufferedReader, size: int) -> int:
     data = f.read(size)
     return int.from_bytes(data, byteorder="big")
 
 
-def read_8(f):
+def read_8(f: BufferedReader) -> int:
     return read_int(f, 1)
 
 
-def read_short(f):
+def read_short(f: BufferedReader) -> int:
     return read_int(f, 2)
 
 
@@ -40,7 +42,7 @@ class StripHeader:
     rect: Rect
 
 
-def parse_strip_header(f):
+def parse_strip_header(f: BufferedReader) -> StripHeader:
     cvid_id = read_short(f)
     strip_size = read_short(f)
     top_y = read_short(f)
@@ -49,9 +51,9 @@ def parse_strip_header(f):
     bottom_x = read_short(f)
 
     if cvid_id == 0x1000:
-        code_type = "intra-coded"
+        _code_type = "intra-coded"
     elif cvid_id == 0x1100:
-        code_type = "inter-coded"
+        _code_type = "inter-coded"
 
     # only handle itra coded or go out with a bang
     assert cvid_id == 0x1000
@@ -72,7 +74,7 @@ class Block12bV4:
 
     # R = y+2*v  G = y-(u/2)-v  B = y+2*u
 
-    def pixel(self, var: Literal["y0", "y1", "y2", "y3"]):
+    def pixel(self, var: Literal["y0", "y1", "y2", "y3"]) -> tuple[int, int, int]:
         y = getattr(self, var)
         R = y + 2 * self.v
         G = y - (self.u // 2) - self.v
@@ -99,7 +101,7 @@ class Block12bV4:
         return [self.p0, self.p1, self.p2, self.p3]
 
 
-code_blocks: list[CinepakFrame] = []
+code_blocks: list[Block12bV4] = []
 
 
 @dataclass
@@ -107,18 +109,18 @@ class CinepakFrame:
     width: int
     height: int
 
-    red: np.array
-    green: np.array
-    blue: np.array
+    red: np.ndarray[np.uint16, np.dtype[np.float64]]
+    green: np.ndarray[np.uint16, np.dtype[np.float64]]
+    blue: np.ndarray[np.uint16, np.dtype[np.float64]]
 
-    def create_img(self) -> Image:
+    def create_img(self) -> Image.Image:
         red = Image.fromarray(self.red).convert("L")
         green = Image.fromarray(self.green).convert("L")
         blue = Image.fromarray(self.blue).convert("L")
         return Image.merge("RGB", (red, green, blue))
 
 
-def parse_chunk(f, frame: CinepakFrame):
+def parse_chunk(f, frame: CinepakFrame) -> None:
     chunk_id = read_short(f)
     size = read_short(f) - 4
     end_pos = f.tell() + size
@@ -213,9 +215,9 @@ def parse_chunk(f, frame: CinepakFrame):
         f.seek(end_pos)
 
 
-def parse(filename: str):
+def parse(filename: str) -> None:
     f = open(filename, "rb")
-    flags = read_int(f, 1)
+    _flags = read_int(f, 1)
     file_size = read_int(f, 3)
     width = read_int(f, 2)
     height = read_int(f, 2)
@@ -224,9 +226,9 @@ def parse(filename: str):
     frame = CinepakFrame(
         width,
         height,
-        np.zeros((height, width)),
-        np.zeros((height, width)),
-        np.zeros((height, width)),
+        np.zeros((height, width), dtype=np.float64),
+        np.zeros((height, width), dtype=np.float64),
+        np.zeros((height, width), dtype=np.float64),
     )
 
     # We aren't able to handle images with multiple strips
@@ -235,7 +237,7 @@ def parse(filename: str):
     print(
         f"{filename}: {width}x{height} strips: {number_coded_strips} size: {file_size}"
     )
-    header = parse_strip_header(f)
+    _header = parse_strip_header(f)
 
     while f.tell() < file_size:
         print(f"0x{f.tell():X}")
