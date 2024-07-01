@@ -7,7 +7,7 @@ authors = ["Roland van Laar <roland@rolandvanlaar.nl>"]
 [tool.poetry.dependencies]
 python = ">= 3.10, < 3.13"
 mrcrowbar = {git = "https://github.com/moralrecordings/mrcrowbar"}
-numpy = "^1.25.2"
+numpy = "^2.0"
 pillow = "^10.0.0"
 pyav = "^11.3.0"
 pygfx = "^0.2.0"
