@@ -12,8 +12,20 @@ from enum import IntEnum, auto
 from mrcrowbar import models as mrc
 from mrcrowbar.utils import to_uint32_be as FourCCB
 
+from fractions import Fraction
 
-class AppleFloatField(mrc.Field):
+
+class FixedFractionField(mrc.Field):
+    """
+    Apple used a 32 bit Fixed fraction field.
+    the first 16 bits are the integer
+    the last 16 bits the part behind the comma.
+    i.e. divide by 65536.
+
+    Mathematically this is the equivalent of dividing the
+    whole 32 bits by 0x10000 (65536).
+    """
+
     def __init__(self, offset):
         default = []
         super().__init__(default=default)
@@ -21,10 +33,8 @@ class AppleFloatField(mrc.Field):
 
     def get_from_buffer(self, buffer, parent=None):
         offset = self.offset
-        a = struct.unpack(">h", buffer[offset : offset + 2])[0]
-        # TODO: is b signed or unsigned?
-        b = struct.unpack(">H", buffer[offset + 2 : offset + 4])[0]
-        return a + b / 65536
+        fixed = struct.unpack(">i", buffer[offset : offset + 4])[0]
+        return float(Fraction(fixed, 0x10000))
 
 
 class GobbleAtom(mrc.Block):
@@ -168,8 +178,8 @@ class tkhdAtom(mrc.Block):
     volume               = mrc.UInt16_BE(0x24)
     reserved             = mrc.UInt16_BE(0x26)
     matrix_structure     = mrc.Bytes(0x28, length=36)
-    track_width          = AppleFloatField(0x4c)
-    track_height         = AppleFloatField(0x50)
+    track_width          = FixedFractionField(0x4c)
+    track_height         = FixedFractionField(0x50)
 
 
 class mdatAtom(mrc.Block):
@@ -316,8 +326,8 @@ class VideoSampleDescriptionTableEntry(mrc.Block):
 
     width                    = mrc.UInt16_BE(0x18)
     height                   = mrc.UInt16_BE(0x1A)
-    horiz_resolution         = AppleFloatField(0x1C) # pixels per inch
-    vert_resolution          = AppleFloatField(0x20) # pixels per inch
+    horiz_resolution         = FixedFractionField(0x1C) # pixels per inch
+    vert_resolution          = FixedFractionField(0x20) # pixels per inch
     reserved                 = mrc.Bytes(0x24, length=4)
     frame_count_per_sample   = mrc.UInt16_BE(0x28)
     compressor_name_size     = mrc.UInt8(0x2A)
@@ -341,12 +351,12 @@ class PanoSampleDescriptionTableEntry(mrc.Block):
     reserved3                = mrc.Bytes(0x14, length = 4 * 6)
     hotSpotTrackID           = mrc.Int32_BE(0x2C)
     reserved4                = mrc.Bytes(0x30, length = 4 * 9)
-    hPanStart                = AppleFloatField(0x54)
-    hPanEnd                  = AppleFloatField(0x58)
-    vPanTop                  = AppleFloatField(0x5C)
-    vPanBottom               = AppleFloatField(0x60)
-    minimumZoom              = AppleFloatField(0x64)
-    maximumZoom              = AppleFloatField(0x68)
+    hPanStart                = FixedFractionField(0x54)
+    hPanEnd                  = FixedFractionField(0x58)
+    vPanTop                  = FixedFractionField(0x5C)
+    vPanBottom               = FixedFractionField(0x60)
+    minimumZoom              = FixedFractionField(0x64)
+    maximumZoom              = FixedFractionField(0x68)
 
     # info for the highest res version of scene track
     sceneSizeX               = mrc.UInt32_BE(0x6C)
@@ -469,13 +479,13 @@ class NAVGAtom(mrc.Block):
 
     # 180.0 for kStandardObject or kObjectInScene,
     # actual degrees for kOldNavigableMovieScene.
-    field_of_view            = AppleFloatField(0x10)
-    startHPan                = AppleFloatField(0x14) # start horizontal pan angle in degrees
-    endHPan                  = AppleFloatField(0x18) # end horizontal pan angle in degrees
-    endVPan                  = AppleFloatField(0x1C) # end vertical pan angle in degrees
-    startVPan                = AppleFloatField(0x20) # start vertical pan angle in degrees
-    initialHPan              = AppleFloatField(0x24) # initial horizontal pan angle in degrees (poster view)
-    initialVPan              = AppleFloatField(0x28) # initial vertical pan angle in degrees (poster view)
+    field_of_view            = FixedFractionField(0x10)
+    startHPan                = FixedFractionField(0x14) # start horizontal pan angle in degrees
+    endHPan                  = FixedFractionField(0x18) # end horizontal pan angle in degrees
+    endVPan                  = FixedFractionField(0x1C) # end vertical pan angle in degrees
+    startVPan                = FixedFractionField(0x20) # start vertical pan angle in degrees
+    initialHPan              = FixedFractionField(0x24) # initial horizontal pan angle in degrees (poster view)
+    initialVPan              = FixedFractionField(0x28) # initial vertical pan angle in degrees (poster view)
     reserved2                = mrc.UInt32_BE(0x2C) # Zro
 
 
@@ -502,7 +512,7 @@ class pInfAtom(mrc.Block):
     """
     name                     = mrc.Bytes(0x00, length=32)
     defNodeID                = mrc.UInt32_BE(0x20)
-    defZoom                  = AppleFloatField(0x24)
+    defZoom                  = FixedFractionField(0x24)
     reserved                 = mrc.UInt32_BE(0x28)
     pad                      = mrc.Int16_BE(0x2C)
     number_of_entries        = mrc.Int16_BE(0x2E)

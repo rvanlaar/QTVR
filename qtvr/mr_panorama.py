@@ -8,7 +8,7 @@ from mrcrowbar.lib.platforms.director import Rect
 from mrcrowbar.utils import to_uint32_be as FourCCB
 
 from .mr_quicktime import (
-    AppleFloatField,
+    FixedFractionField,
     ContainerAtom,
     get_atom,
     get_atoms,
@@ -72,9 +72,9 @@ class HotSpot(strOffsetReprBlock):
     typeData            = mrc.UInt32_BE(0x08) # for link and navg, the ID in the link and navg table
 
     # canonical view for this hot spot
-    viewHPan            = AppleFloatField(0x0C)
-    viewVPan            = AppleFloatField(0x10)
-    viewZoom            = AppleFloatField(0x14)
+    viewHPan            = FixedFractionField(0x0C)
+    viewVPan            = FixedFractionField(0x10)
+    viewZoom            = FixedFractionField(0x14)
 
     # HotspotRect
     rect                = mrc.BlockField(Rect, 0x18)
@@ -119,17 +119,17 @@ class PanoSampleHeader(strOffsetReprBlock):
     nodeID              = mrc.UInt32_BE(0x00)
 
     # default values when displaying this node
-    defHPan             = AppleFloatField(0x04)
-    defVPan             = AppleFloatField(0x08)
-    defZoom             = AppleFloatField(0x0C)
+    defHPan             = FixedFractionField(0x04)
+    defVPan             = FixedFractionField(0x08)
+    defZoom             = FixedFractionField(0x0C)
 
     # constrains for this node; zero for default
-    minHpan             = AppleFloatField(0x10)
-    minVPan             = AppleFloatField(0x14)
-    minZoom             = AppleFloatField(0x18)
-    maxHPan             = AppleFloatField(0x1C)
-    maxVPan             = AppleFloatField(0x20)
-    maxZoom             = AppleFloatField(0x24)
+    minHpan             = FixedFractionField(0x10)
+    minVPan             = FixedFractionField(0x14)
+    minZoom             = FixedFractionField(0x18)
+    maxHPan             = FixedFractionField(0x1C)
+    maxVPan             = FixedFractionField(0x20)
+    maxZoom             = FixedFractionField(0x24)
 
     reserved1           = mrc.Int32_BE(0x28)
     reserved2           = mrc.Int32_BE(0x2C)
@@ -148,9 +148,9 @@ class PanoLink(strOffsetReprBlock):
     reserved4           = mrc.Bytes(0x10, length = 4 * 3)
 
     # values to set at the destination node
-    toHPan              = AppleFloatField(0x1C)
-    toVPan              = AppleFloatField(0x20)
-    toZoom              = AppleFloatField(0x24)
+    toHPan              = FixedFractionField(0x1C)
+    toVPan              = FixedFractionField(0x20)
+    toZoom              = FixedFractionField(0x24)
 
     reserved5           = mrc.Int32_BE(0x28)
     reserved6           = mrc.Int32_BE(0x2C)
