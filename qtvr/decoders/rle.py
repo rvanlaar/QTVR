@@ -27,7 +27,7 @@ class RLEFrame:
     width: int
     height: int
 
-    surface: np.array
+    surface: np.ndarray[int, np.dtype[np.int8]]
     pos_x: int = 0
     pos_y: int = 0
 
@@ -48,8 +48,12 @@ class RLEFrame:
         self.pos_x = 0
         self.pos_y += 1
 
-    def set_pixel(self, R:int, G: int, B: int):
-        self.surface[self.pos_y: self.pos_y+1, self.pos_x: self.pos_x+1] = [R, G, B]
+    def set_pixel(self, R: int, G: int, B: int):
+        self.surface[self.pos_y : self.pos_y + 1, self.pos_x : self.pos_x + 1] = [
+            R,
+            G,
+            B,
+        ]
         self.next_pixel()
 
     def create_img(self):
@@ -85,20 +89,20 @@ def create_image_rle(
         number_of_lines_to_update = read_int(f, 2)  # number of lines to update
         f.read(2)  # unkown
 
-        #print(f"lines: {number_of_lines_to_update}")
+        # print(f"lines: {number_of_lines_to_update}")
         for i in range(number_of_lines_to_update):
             skip_count = read_byte(f)
-            #print(f"skip: {skip_count}")
+            # print(f"skip: {skip_count}")
             frame.skip_pixels(skip_count - 1)
 
             rle_code = read_byteS(f)
-            #print(f"rle_code: {rle_code}")
+            # print(f"rle_code: {rle_code}")
 
             while rle_code != -1:
                 # another single-byte skip code in the stream
                 if rle_code == 0:
                     skip_count = read_byteS(f)
-                    frame.skip_pixels(skip_count - 1) 
+                    frame.skip_pixels(skip_count - 1)
                 if rle_code > 0:
                     count = rle_code
                     for _ in range(count):
@@ -106,11 +110,11 @@ def create_image_rle(
                         frame.set_pixel(R, G, B)
                 if rle_code < -1:
                     R, G, B = read_byte(f), read_byte(f), read_byte(f)
-                    count =-rle_code
+                    count = -rle_code
                     for _ in range(count):
                         frame.set_pixel(R, G, B)
                 rle_code = read_byteS(f)
-                #print(f"rle_code: {rle_code}")
+                # print(f"rle_code: {rle_code}")
             frame.next_line()
 
         return frame

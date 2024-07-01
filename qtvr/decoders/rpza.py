@@ -11,7 +11,7 @@ class RPZAFrame:
     width: int
     height: int
 
-    surface: np.array
+    surface: np.ndarray[int, np.dtype[np.uint8]]
     pos_x: int = 0
     pos_y: int = 0
     current_block: int = 0
@@ -84,7 +84,7 @@ def create_image_rpza(
     while f.tell() < end_of_chunk:
         opcode_block = read_byte(f)
         num_blocks = (opcode_block & 0x1F) + 1
-        printable_opcode = opcode_block & 0xE0
+        _printable_opcode = opcode_block & 0xE0
         # print(f"0x{printable_opcode:X} blocks: {num_blocks}")
 
         if (opcode_block & 0x80) == 0:
@@ -107,8 +107,7 @@ def create_image_rpza(
             0x00: "Fill blocks with 16 colors",
         }
 
-        if opcode not in (0x80, 0xA0, 0xC0, 0x20, 0x00):
-            breakpoint()
+        assert opcode in table.keys()
 
         # print(table[opcode])
 
@@ -167,9 +166,9 @@ def create_image_rpza(
                 for i, color_id in enumerate(color_ids):
                     x_offset = x + i % 4
                     y_offset = y + i // 4
-                    frame.surface[
-                        y_offset : y_offset + 1, x_offset : x_offset + 1
-                    ] = true_color_table[color_id]
+                    frame.surface[y_offset : y_offset + 1, x_offset : x_offset + 1] = (
+                        true_color_table[color_id]
+                    )
                 frame.next_block()
                 num_blocks -= 1
 
